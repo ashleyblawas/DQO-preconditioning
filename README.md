@@ -16,7 +16,7 @@
   <summary>Table of Contents</summary>
   <ol>
     <li>
-      <a href="#about-the-project">About The Project</a>
+      <a href="#project-description">Project Description</a>
       <ul>
         <li><a href="#built-with">Built With</a></li>
       </ul>
@@ -33,12 +33,10 @@
 
 
 
-<!-- ABOUT THE PROJECT -->
-## About The Project
+<!-- PROJECT DESCRIPTION -->
+## Project Description
 
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
-
-Here's a blank template to get started: To avoid retyping too much info. Do a search and replace with your text editor for the following: `github_username`, `repo_name`, `twitter_handle`, `linkedin_username`, `email_client`, `email`, `project_title`, `project_description`
+To be filled in.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -46,7 +44,7 @@ Here's a blank template to get started: To avoid retyping too much info. Do a se
 
 ### Built With
 
-* [![R]](https://www.r-project.org/) (Version 4.1.0 (2021-05-18) -- "Camp Pontanezen")
+* [R](https://www.r-project.org/) (Version 4.1.0 (2021-05-18) -- "Camp Pontanezen")
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -101,9 +99,6 @@ Project Link: [https://github.com/ashleyblawas/DQO-preconditioning](https://gith
 <!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
-* []()
-* []()
-* []()
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
