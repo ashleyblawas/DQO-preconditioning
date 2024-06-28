@@ -1,0 +1,88 @@
+---
+title: "main"
+author: "Ashley Blawas"
+date: '2024-06-13'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r libraries include=FALSE}
+library(tidyverse)
+library(readxl)
+library(stringr)
+
+```
+
+```{r  include=FALSE}
+
+# Where does data live?
+data_path = "C:/Users/ashle/Dropbox/Ashley/Post-Doc/Projects/DQO preconditioning/data"
+
+# What is the file name?
+file_name = "10364_Supplemental_Data_061224.xlsx"
+
+# What are the sheet names
+sheet1 = "S1. Unenriched Metadata"
+sheet2 = "S2. Uneriched Abundances"
+sheet3 = "S3. Phos Metadata"
+sheet4 = "S4. Phos localized"
+sheet5 = "S5. Phos not localized"
+sheet6 = "S6. Phos filtered"
+
+```
+
+## Load in the metadata
+```{r}
+# Load in the Unenriched Metadata
+unenriched_metadata <- read_excel(paste0(data_path, "/", file_name), sheet = sheet1)
+
+# Make the Animal IDs for the controls unique
+n_na = sum(is.na(unenriched_metadata$Condition))
+unenriched_metadata$Condition[is.na(unenriched_metadata$Condition)] <- paste0("NA_VALUE_", seq_len(n_na))
+
+# Load in the Phosphorylation Metadata
+phos_metadata <- read_excel(paste0(data_path, "/", file_name), sheet = sheet3)
+```
+
+## Load in the unenriched dataset
+```{r}
+# Load in the Unenriched Metadata
+unenriched_abundances <- read_excel(paste0(data_path, "/", file_name), sheet = sheet2)
+
+for (i in 1:nrow(unenriched_metadata)){
+  curr_name = names(unenriched_abundances)[i+3] 
+  curr_id = unlist(str_extract_all(curr_name, "ID.+htrms"))
+  
+  temp_metadata = unenriched_metadata %>%
+  filter(str_detect(`File Name`, curr_id))
+  
+  curr_animal = temp_metadata$Animal
+  curr_condition = temp_metadata$Condition
+  
+  unenriched_abundances <- unenriched_abundances %>% rename(!! paste0(curr_animal, "_", curr_condition, "_", "NP") := curr_name)
+  
+}
+
+
+for (i in 1:nrow(unenriched_metadata)){
+  curr_name = names(unenriched_abundances)[i+36] 
+  curr_id = unlist(str_extract_all(curr_name, "ID.+htrms"))
+  
+  temp_metadata = unenriched_metadata %>%
+  filter(str_detect(`File Name`, curr_id))
+  
+  curr_animal = temp_metadata$Animal
+  curr_condition = temp_metadata$Condition
+  
+  unenriched_abundances <- unenriched_abundances %>% rename(!! paste0(curr_animal, "_", curr_condition, "_", "PGQ") := curr_name)
+  
+}
+
+```
+
+
+```
