@@ -3,17 +3,11 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/github_username/repo_name">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
-  </a>
 
 <h3 align="center">DQO Preconditioning Study</h3>
 
   <p align="center">
-    A study on the effects of preconditioning on the moelcular response to breath-holding in bottlenose dolphins
-    <br />
-    <a href="https://github.com/ashleyblawas/DQO-preconditioning"><strong>Explore the docs »</strong></a>
-    <br />
+    A study on the effects of preconditioning on the moelcular response to breath-holding in bottlenose dolphins.
   </p>
 </div>
 
@@ -60,7 +54,7 @@ Here's a blank template to get started: To avoid retyping too much info. Do a se
 
 ### Built With
 
-* [![Next][Next.js]][Next-url]
+* [![R][R-project.org]][https://www.r-project.org/]
 * [![React][React.js]][React-url]
 * [![Vue][Vue.js]][Vue-url]
 * [![Angular][Angular.io]][Angular-url]
