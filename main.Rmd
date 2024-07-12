@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(readxl)
 library(stringr)
+library(dplyr)
 
 ```
 
@@ -27,11 +28,11 @@ file_name = "10364_Supplemental_Data_061224.xlsx"
 
 # What are the sheet names
 sheet1 = "S1. Unenriched Metadata"
-sheet2 = "S2. Uneriched Abundances"
+sheet2 = "S2. Uneriched Abundances" # NP = # of precursors, PGQ = protein group quantity
 sheet3 = "S3. Phos Metadata"
-sheet4 = "S4. Phos localized"
-sheet5 = "S5. Phos not localized"
-sheet6 = "S6. Phos filtered"
+sheet4 = "S4. Phos localized" # Place where it was on the protein
+sheet5 = "S5. Phos not localized" # Not able to place where it was on the protein
+sheet6 = "S6. Phos filtered" # 
 
 ```
 
@@ -46,6 +47,13 @@ unenriched_metadata$Condition[is.na(unenriched_metadata$Condition)] <- paste0("N
 
 # Load in the Phosphorylation Metadata
 phos_metadata <- read_excel(paste0(data_path, "/", file_name), sheet = sheet3)
+
+# Make the Animal IDs for the controls unique
+n_na = sum(phos_metadata$Replicate == "SPQC_prep")
+phos_metadata$Replicate[phos_metadata$Replicate == "SPQC_prep"] <- paste0("SPQC_prep", seq_len(n_na))
+
+n_na = sum(phos_metadata$Replicate == "SPQC_tech")
+phos_metadata$Replicate[phos_metadata$Replicate == "SPQC_tech"] <- paste0("SPQC_tech", seq_len(n_na))
 ```
 
 ## Load in the unenriched dataset
@@ -84,5 +92,69 @@ for (i in 1:nrow(unenriched_metadata)){
 
 ```
 
+## Load in the filtered phosphoprotein dataset
+```{r}
+# Load in the Unenriched Metadata
+phos_filtered <- read_excel(paste0(data_path, "/", file_name), sheet = sheet6)
 
+# Drop CV columns
+phos_filtered <- phos_filtered %>% dplyr::select(!starts_with("CV"))
+
+# Change data frame organization to have names
+for (i in 1:nrow(phos_metadata)){
+  curr_name = names(phos_filtered)[i+5] # Add 5 because there are 5 columns that are not IDs
+  curr_id = unlist(str_extract_all(curr_name, "ID.+htrms"))
+  
+  temp_metadata = phos_metadata %>%
+  filter(str_detect(`File Name`, curr_id))
+  
+  curr_animal = temp_metadata$Condition
+  curr_condition = temp_metadata$Replicate
+  
+  phos_filtered <- phos_filtered %>% rename(!! paste0(curr_animal, "_", curr_condition, "_", "EG") := curr_name)
+  
+}
+
+```
+
+
+# Make data frame for plotting
+
+```{r}
+
+phos_filtered <- phos_filtered %>% select(-PG.ProteinAccessions, -PG.ProteinDescriptions, -PG.ProteinNames, -EG.PrecursorId)
+
+phos_filtered <- phos_filtered %>% pivot_longer(!PG.Genes, names_to = "Sample") %>%
+  rename(Value = value) %>% 
+  rename(Gene = PG.Genes)
+
+# Mutate new columns
+phos_filtered <- phos_filtered %>% mutate(Animal = str_extract(Sample, "^\\D+")) %>%
+  mutate(Date = str_extract(Sample, "\\d+")) %>%
+  mutate(Condition = sub("^[^_]*_([^_]*).*", "\\1", Sample)) %>%
+  dplyr::select(-Sample) %>%
+  dplyr::select(Gene, Animal, Condition, Date, Value)
+  
+
+```
+
+# Choose a gene to test
+```{r}
+
+phos_filtered %>% filter(Gene == "HBA") %>%
+  group_by(Animal, Condition) %>%
+  summarize(MaxValue = max(Value)) %>%
+  ungroup() %>%
+  ggplot(aes(x=Condition, y = MaxValue)) +
+  facet_wrap(vars(Animal), scales = "free") +
+  geom_point()
+
+```
+
+# Look at change between time point A & C and C & D
+```{r}
+
+upup <- phos_filtered %>% 
+  group_by(Gene, Animal) %>%
+  if
 ```
