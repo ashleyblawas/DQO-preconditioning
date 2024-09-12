@@ -15,18 +15,24 @@ library(tidyverse)
 library(readxl)
 library(stringr)
 library(dplyr)
+```
 
-#Test
+```{r}
+#options(repos = "http://cran.rstudio.com/")
 
+#Install tinytex package
+#install.packages("tinytex")
+
+#Install tinytex
+#tinytex::install_tinytex(force = TRUE)
 ```
 
 ```{r  include=FALSE}
-
 # Where does data live?
-data_path = "C:/Users/ashle/Dropbox/Ashley/Post-Doc/Projects/DQO preconditioning/data"
+#data_path = "C:/Users/ashle/Dropbox/Ashley/Post-Doc/Projects/DQO preconditioning/data"
 
 # What is the file name?
-file_name = "10364_Supplemental_Data_061224.xlsx"
+#file_name = "10364_Supplemental_Data_061224.xlsx"
 
 # What are the sheet names
 sheet1 = "S1. Unenriched Metadata"
@@ -35,20 +41,23 @@ sheet3 = "S3. Phos Metadata"
 sheet4 = "S4. Phos localized" # Place where it was on the protein
 sheet5 = "S5. Phos not localized" # Not able to place where it was on the protein
 sheet6 = "S6. Phos filtered" # 
-
 ```
 
 ## Load in the metadata
 ```{r}
+my_excel <- read_excel("10364_Supplemental_Data_061224.xlsx")
+
 # Load in the Unenriched Metadata
-unenriched_metadata <- read_excel(paste0(data_path, "/", file_name), sheet = sheet1)
+#unenriched_metadata <- read_excel(paste0(data_path, "/", file_name), sheet = sheet1)
+unenriched_metadata <- read_excel(paste0("10364_Supplemental_Data_061224.xlsx"), sheet = sheet1)
 
 # Make the Animal IDs for the controls unique
 n_na = sum(is.na(unenriched_metadata$Condition))
 unenriched_metadata$Condition[is.na(unenriched_metadata$Condition)] <- paste0("NA_VALUE_", seq_len(n_na))
 
 # Load in the Phosphorylation Metadata
-phos_metadata <- read_excel(paste0(data_path, "/", file_name), sheet = sheet3)
+#phos_metadata <- read_excel(paste0(data_path, "/", file_name), sheet = sheet3)
+phos_metadata <- read_excel(paste0("10364_Supplemental_Data_061224.xlsx"), sheet = sheet3)
 
 # Make the Animal IDs for the controls unique
 n_na = sum(phos_metadata$Replicate == "SPQC_prep")
@@ -61,7 +70,8 @@ phos_metadata$Replicate[phos_metadata$Replicate == "SPQC_tech"] <- paste0("SPQC_
 ## Load in the unenriched dataset
 ```{r}
 # Load in the Unenriched Metadata
-unenriched_abundances <- read_excel(paste0(data_path, "/", file_name), sheet = sheet2)
+#unenriched_abundances <- read_excel(paste0(data_path, "/", file_name), sheet = sheet2)
+unenriched_abundances <- read_excel(paste0("10364_Supplemental_Data_061224.xlsx"), sheet = sheet2)
 
 for (i in 1:nrow(unenriched_metadata)){
   curr_name = names(unenriched_abundances)[i+3] 
@@ -91,13 +101,13 @@ for (i in 1:nrow(unenriched_metadata)){
   unenriched_abundances <- unenriched_abundances %>% rename(!! paste0(curr_animal, "_", curr_condition, "_", "PGQ") := curr_name)
   
 }
-
 ```
 
 ## Load in the filtered phosphoprotein dataset
 ```{r}
 # Load in the Unenriched Metadata
-phos_filtered <- read_excel(paste0(data_path, "/", file_name), sheet = sheet6)
+#phos_filtered <- read_excel(paste0(data_path, "/", file_name), sheet = sheet6)
+phos_filtered <- read_excel(paste0("10364_Supplemental_Data_061224.xlsx"), sheet = sheet6)
 
 # Drop CV columns
 phos_filtered <- phos_filtered %>% dplyr::select(!starts_with("CV"))
@@ -116,14 +126,12 @@ for (i in 1:nrow(phos_metadata)){
   phos_filtered <- phos_filtered %>% rename(!! paste0(curr_animal, "_", curr_condition, "_", "EG") := curr_name)
   
 }
-
 ```
 
 
 # Make data frame for plotting
 
 ```{r}
-
 phos_filtered <- phos_filtered %>% select(-PG.ProteinAccessions, -PG.ProteinDescriptions, -PG.ProteinNames, -EG.PrecursorId)
 
 phos_filtered <- phos_filtered %>% pivot_longer(!PG.Genes, names_to = "Sample") %>%
@@ -136,13 +144,11 @@ phos_filtered <- phos_filtered %>% mutate(Animal = str_extract(Sample, "^\\D+"))
   mutate(Condition = sub("^[^_]*_([^_]*).*", "\\1", Sample)) %>%
   dplyr::select(-Sample) %>%
   dplyr::select(Gene, Animal, Condition, Date, Value)
-  
-
 ```
 
 # Choose a gene to test
 ```{r}
-
+#Testing HBA
 phos_filtered %>% filter(Gene == "HBA") %>%
   group_by(Animal, Condition) %>%
   summarize(MaxValue = max(Value)) %>%
@@ -150,13 +156,168 @@ phos_filtered %>% filter(Gene == "HBA") %>%
   ggplot(aes(x=Condition, y = MaxValue)) +
   facet_wrap(vars(Animal), scales = "free") +
   geom_point()
+```
 
+```{r}
+#NEW CECE
+#Testing FGA
+phos_filtered %>% filter(Gene == "FGA") %>%
+  group_by(Animal, Condition) %>%
+  summarize(MaxValue = max(Value)) %>%
+  ungroup() %>%
+  ggplot(aes(x=Condition, y = MaxValue)) +
+  facet_wrap(vars(Animal), scales = "free") +
+  geom_point()
+```
+
+```{r}
+#NEW CECE
+#Testing KNG1
+phos_filtered %>% filter(Gene == "KNG1") %>%
+  group_by(Animal, Condition) %>%
+  summarize(MaxValue = max(Value)) %>%
+  ungroup() %>%
+  ggplot(aes(x=Condition, y = MaxValue)) +
+  facet_wrap(vars(Animal), scales = "free") +
+  geom_point()
+```
+
+```{r}
+#NEW CECE
+#Testing RHAG
+phos_filtered %>% filter(Gene == "RHAG") %>%
+  group_by(Animal, Condition) %>%
+  summarize(MaxValue = max(Value)) %>%
+  ungroup() %>%
+  ggplot(aes(x=Condition, y = MaxValue)) +
+  facet_wrap(vars(Animal), scales = "free") +
+  geom_point()
+```
+
+```{r}
+#NEW CECE
+#Testing FN1
+phos_filtered %>% filter(Gene == "FN1") %>%
+  group_by(Animal, Condition) %>%
+  summarize(MaxValue = max(Value)) %>%
+  ungroup() %>%
+  ggplot(aes(x=Condition, y = MaxValue)) +
+  facet_wrap(vars(Animal), scales = "free") +
+  geom_point()
+```
+
+```{r}
+#NEW CECE
+#Testing CFL1
+phos_filtered %>% filter(Gene == "CFL1") %>%
+  group_by(Animal, Condition) %>%
+  summarize(MaxValue = max(Value)) %>%
+  ungroup() %>%
+  ggplot(aes(x=Condition, y = MaxValue)) +
+  facet_wrap(vars(Animal), scales = "free") +
+  geom_point()
+```
+
+```{r}
+#NEW CECE
+#Testing SERPINF2
+phos_filtered %>% filter(Gene == "SERPINF2") %>%
+  group_by(Animal, Condition) %>%
+  summarize(MaxValue = max(Value)) %>%
+  ungroup() %>%
+  ggplot(aes(x=Condition, y = MaxValue)) +
+  facet_wrap(vars(Animal), scales = "free") +
+  geom_point()
+```
+
+```{r}
+#NEW CECE
+#Testing SPTB
+phos_filtered %>% filter(Gene == "SPTB") %>%
+  group_by(Animal, Condition) %>%
+  summarize(MaxValue = max(Value)) %>%
+  ungroup() %>%
+  ggplot(aes(x=Condition, y = MaxValue)) +
+  facet_wrap(vars(Animal), scales = "free") +
+  geom_point()
+```
+
+```{r}
+#NEW CECE
+#Testing SLC43A1
+phos_filtered %>% filter(Gene == "SLC43A1") %>%
+  group_by(Animal, Condition) %>%
+  summarize(MaxValue = max(Value)) %>%
+  ungroup() %>%
+  ggplot(aes(x=Condition, y = MaxValue)) +
+  facet_wrap(vars(Animal), scales = "free") +
+  geom_point()
+```
+
+```{r}
+#NEW CECE
+#Testing SPTB
+phos_filtered %>% filter(Gene == "SPTB") %>%
+  group_by(Animal, Condition) %>%
+  summarize(MaxValue = max(Value)) %>%
+  ungroup() %>%
+  ggplot(aes(x=Condition, y = MaxValue)) +
+  facet_wrap(vars(Animal), scales = "free") +
+  geom_point()
 ```
 
 # Look at change between time point A & C and C & D
 ```{r}
+#Ashley's initial work below
+#upup <- phos_filtered %>% 
+#  group_by(Gene, Animal) %>%
+#  if
 
-upup <- phos_filtered %>% 
+#NEW CECE
+#Making a version of the phos_filtered dataset with only the max values for each condition
+phos_filtered_max_values <- phos_filtered %>%
+  group_by(Gene, Animal, Condition) %>%
+  summarize(MaxValue = max(Value)) %>%
+  filter(Condition %in% c("CA", "CC", "CD", "PC6A", "PC^C", "PC6D")) %>%
+  ungroup()
+
+#Making datasets that calculate and store the differences between CA and CC, CD and CC, PC6C and PC6A, and PC6D and PC6C
+phos_filtered_change_CA_CC <- phos_filtered_max_values %>%
   group_by(Gene, Animal) %>%
-  if
+  summarize(Difference = MaxValue[Condition == "CC"] - MaxValue[Condition == "CA"]) %>%
+  mutate(Condition = "CA_CC") %>%
+  bind_rows(phos_filtered_max_values)
+
+phos_filtered_change_CC_CD <- phos_filtered_max_values %>%
+  group_by(Gene, Animal) %>%
+  summarize(Difference = MaxValue[Condition == "CD"] - MaxValue[Condition == "CC"]) %>% mutate(Condition = "CC_CD") %>%
+  bind_rows(phos_filtered_max_values)
+
+phos_filtered_change_PC6A_PC6C <- phos_filtered_max_values %>%
+  group_by(Gene, Animal) %>%
+  summarize(Difference = MaxValue[Condition == "PC6C"] - MaxValue[Condition == "PC6A"]) %>%
+  mutate(Condition = "PC6A_PC6C") %>%
+  bind_rows(phos_filtered_max_values)
+
+phos_filtered_change_PC6C_PC6D <- phos_filtered_max_values %>%
+  group_by(Gene, Animal) %>%
+  summarize(Difference = MaxValue[Condition == "PC6D"] - MaxValue[Condition == "PC6C"]) %>%
+  mutate(Condition = "PC6C_PC6D") %>%
+  bind_rows(phos_filtered_max_values)
+
+#Making an overall dataset combining all of these datasets
+phos_filtered_change <- bind_rows(phos_filtered_change_CA_CC, phos_filtered_change_CC_CD, phos_filtered_change_PC6A_PC6C, phos_filtered_change_PC6C_PC6D) %>%
+  filter(Condition %in% c("CA_CC", "CC_CD", "PC6A_PC6C", "PC6C_PC6D"))
+
+print(phos_filtered_change)
+```
+
+```{r}
+#Printing a sample geom_point to visualize these changes for the HBA gene
+phos_filtered_change %>%
+  filter(Gene == "HBA") %>%
+  group_by(Animal, Condition) %>%
+  summarize(MaxValue = max(Difference)) %>%
+  ungroup() %>%
+  ggplot(aes(x=Condition, y = MaxValue)) + facet_wrap(vars(Animal), scales = "free") + geom_point()
 ```
