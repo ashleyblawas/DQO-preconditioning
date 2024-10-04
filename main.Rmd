@@ -321,3 +321,99 @@ phos_filtered_change %>%
   ungroup() %>%
   ggplot(aes(x=Condition, y = MaxValue)) + facet_wrap(vars(Animal), scales = "free") + geom_point()
 ```
+
+#Making new dataset to conduct paired t-test w/ protein abundance and phosphorylation
+```{r}
+# Load in sheet2
+sheet2_metadata <- read_excel(paste0("10364_Supplemental_Data_061224.xlsx"), sheet = sheet2)
+
+# Replace NaN values with 0 for all numeric columns
+sheet2_metadata[] <- lapply(sheet2_metadata, function(x) {
+  if (is.numeric(x)) {
+    x[is.nan(x)] <- 0
+  }
+  return(x)
+})
+
+# Function to convert NaN to NA in character columns
+sheet2_metadata[] <- lapply(sheet2_metadata, function(x) {
+  if (is.character(x)) {
+    x[x == "NaN"] <- NA  # Convert "NaN" string to NA
+  }
+  return(x)
+})
+
+# Replace NA values with "0" in the entire data frame
+sheet2_metadata[is.na(sheet2_metadata)] <- "0"
+
+# Convert the character columns to numeric columns
+sheet2_metadata$"[1] ID112569_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[1] ID112569_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[2] ID112570_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[2] ID112570_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[3] ID112571_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[3] ID112571_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[4] ID112572_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[4] ID112572_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[5] ID112573_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[5] ID112573_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[6] ID112574_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[6] ID112574_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[7] ID112575_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[7] ID112575_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[8] ID112576_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[8] ID112576_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[9] ID112577_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[9] ID112577_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[10] ID112578_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[10] ID112578_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[11] ID112579_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[11] ID112579_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[12] ID112580_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[12] ID112580_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[13] ID112581_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[13] ID112581_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[14] ID112582_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[14] ID112582_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[15] ID112583_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[15] ID112583_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[16] ID112584_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[16] ID112584_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[17] ID112585_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[17] ID112585_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[18] ID112586_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[18] ID112586_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[19] ID112587_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[19] ID112587_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[20] ID112588_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[20] ID112588_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[21] ID112589_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[21] ID112589_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[22] ID112590_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[22] ID112590_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[23] ID112592_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[23] ID112592_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[24] ID112593_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[24] ID112593_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[25] ID112594_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[25] ID112594_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[26] ID112595_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[26] ID112595_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[27] ID112596_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[27] ID112596_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[28] ID112597_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[28] ID112597_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[29] ID112598_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[29] ID112598_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[30] ID112599_01_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[30] ID112599_01_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[31] IDSPQC_02_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[31] IDSPQC_02_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[32] IDSPQC_03_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[32] IDSPQC_03_MA10140C_10364_050724.htrms.PG.Quantity")
+
+sheet2_metadata$"[33] IDSPQC_04_MA10140C_10364_050724.htrms.PG.Quantity" <- as.numeric(sheet2_metadata$"[33] IDSPQC_04_MA10140C_10364_050724.htrms.PG.Quantity")
+
+# Log2 normalization applied to all numeric columns
+# Added 1 before log transformation to avoid taking log of zero
+sheet2_metadata_normalized <- as.data.frame(lapply(sheet2_metadata, function(x) if(is.numeric(x)) log2(x + 1) else x))
+```
