@@ -278,7 +278,7 @@ phos_filtered %>% filter(Gene == "SPTB") %>%
 phos_filtered_max_values <- phos_filtered %>%
   group_by(Gene, Animal, Condition) %>%
   summarize(MaxValue = max(Value)) %>%
-  filter(Condition %in% c("CA", "CC", "CD", "PC6A", "PC^C", "PC6D")) %>%
+  filter(Condition %in% c("CA", "CC", "CD", "PC6A", "PC6C", "PC6D")) %>%
   ungroup()
 
 #Making datasets that calculate and store the differences between CA and CC, CD and CC, PC6C and PC6A, and PC6D and PC6C
@@ -416,4 +416,21 @@ sheet2_metadata$"[33] IDSPQC_04_MA10140C_10364_050724.htrms.PG.Quantity" <- as.n
 # Log2 normalization applied to all numeric columns
 # Added 1 before log transformation to avoid taking log of zero
 sheet2_metadata_normalized <- as.data.frame(lapply(sheet2_metadata, function(x) if(is.numeric(x)) log2(x + 1) else x))
+```
+
+#Conducting paired T-tests to assess how an individual's phopho levels at a specific residue change between points A, B, C, and D
+```{r}
+# Generic paired t-test format
+#t_test_result <- t.test(data_set$column_before, data_set$column_after, paired = TRUE)
+
+#Kolohe CA to CC
+t_test_kolohe_CA_CC <- t.test(sheet2_metadata_normalized$`X.1..ID112569_01_MA10140C_10364_050724.htrms.PG.Quantity`, sheet2_metadata_normalized$`X.2..ID112570_01_MA10140C_10364_050724.htrms.PG.Quantity`, paired = TRUE)
+print(t_test_kolohe_CA_CC)
+#This approach cannot be correct because it is bunching all of the residues together to compare between these two scenarios
+
+#Instead, try rearranging the dataset to compare CA and CC phosphorylation for a specific residue among all individuals
+
+#other issue is I can't even use Sheet 2 exclusively bc it is by protein, not residue, bc protein amount is done by protein
+
+#therefore, sheet 2 is more protein-wide phosphorylation rather than residue phosphorylation
 ```
