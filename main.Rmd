@@ -434,3 +434,112 @@ print(t_test_kolohe_CA_CC)
 
 #therefore, sheet 2 is more protein-wide phosphorylation rather than residue phosphorylation
 ```
+
+##Making a heatmap for Figure 3 in the paper plan
+#Phosphorylation results broad overview
+```{r}
+install.packages("readxl")
+install.packages("dplyr")
+install.packages("ggplot2")
+install.packages("pheatmap")
+install.packages("reshape2")
+
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(pheatmap)
+library(reshape2)
+```
+
+```{r}
+# Load data from Excel
+heatmap_data_ <- read_excel("DQO Heatmap Datasheet.xlsx", sheet = 1)  # Adjust file path and sheet number/name
+
+install.packages("dplyr")
+library(dplyr)
+
+# Select columns 2, 16, and 57
+heatmap_data_filtered <- heatmap_data_ %>%
+  select(2, 36, 37, 38, 39)
+```
+
+```{r}
+heatmap_data_filtered <- na.omit(heatmap_data_filtered)
+
+heatmap_data_filtered <- heatmap_data_filtered %>%
+  mutate_at(vars(2, 3, 4, 5), ~ as.numeric(ifelse(. >= 1, 2, 1)))
+```
+
+```{r}
+# Multiply Column 2 by Column 3 and store the result in a new column (Column 6)
+heatmap_data_filtered <- heatmap_data_filtered %>%
+  mutate(Kolohe = `Kolohe_Control_Diff_CA` * `Kolohe_PC6_Diff_CA`)
+
+heatmap_data_filtered <- heatmap_data_filtered %>%
+  mutate(Hoku = `Hoku_Control_Diff_CA` * `Hoku_PC6_Diff_CA`)
+```
+
+```{r}
+# Remove columns 2, 3, 4, and 5 by their indices
+heatmap_data_filtered <- heatmap_data_filtered %>%
+  select(-c(2, 3, 4, 5))
+```
+
+```{r}
+# Reshape data into long format
+heatmap_data_filtered_long <- melt(heatmap_data_filtered, id.vars = "PG.Genes", variable.name = "Condition", value.name = "Value")
+```
+
+```{r}
+# Create the heatmap plot
+heatmap_data_filtered_long[3434, 1] <- "HNRNPH2;HNRNPH1"
+
+heatmap_data_filtered_long_test <- heatmap_data_filtered_long[c(1, 56, 102, 546), ]
+
+#Creating the heat map
+heatmap_plot <- ggplot(heatmap_data_filtered_long_test, aes(x = Condition, y = `PG.Genes`, fill = factor(Value))) +
+  geom_tile(color = "white", linewidth = 1) + 
+  scale_fill_manual(values = c("1" = "blue", "2" = "white", "4" = "red")) + 
+  labs(title = "Gene Expression Heatmap", x = "Condition", y = "Gene", fill = "Value") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+print(heatmap_plot)
+```
+
+```{r}
+# Making a heatmap where each gene is different
+heatmap_data_filtered_copy <- heatmap_data_filtered
+
+# If your first column is named "Gene", replace df[, 1] with df$Gene
+new_names <- character(nrow(heatmap_data_filtered_copy))
+counter <- 1
+
+for (i in 1:nrow(heatmap_data_filtered_copy)) {
+  if (i == 1 || heatmap_data_filtered_copy$`PG.Genes`[i] != heatmap_data_filtered_copy$`PG.Genes`[i - 1]) {
+    counter <- 1
+  } else {
+    counter <- counter + 1
+  }
+  new_names[i] <- paste0(heatmap_data_filtered_copy$`PG.Genes`[i], ".", counter)
+}
+
+heatmap_data_filtered_copy$New_Gene_Name <- new_names
+
+heatmap_data_filtered_copy$`PG.Genes` <- NULL
+
+# Reshape data into long format
+heatmap_data_filtered_copy_long <- melt(heatmap_data_filtered_copy, id.vars = "New_Gene_Name", variable.name = "Condition", value.name = "Value")
+
+heatmap_data_filtered_copy_long_test <- heatmap_data_filtered_copy_long[c(1, 56, 102, 546, 8336, 8391, 13040), ]
+
+#Creating the heat map
+heatmap_plot <- ggplot(heatmap_data_filtered_copy_long_test, aes(x = Condition, y = `New_Gene_Name`, fill = factor(Value))) +
+  geom_tile(color = "white", linewidth = 1) + 
+  scale_fill_manual(values = c("1" = "blue", "2" = "white", "4" = "red")) + 
+  labs(title = "Gene Expression Heatmap", x = "Condition", y = "Gene", fill = "Value") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+print(heatmap_plot)
+```
