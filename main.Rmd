@@ -50,7 +50,7 @@ unenriched_metadata <- read_excel(paste0(data_path, "/", file_name), sheet = she
 n_na = sum(is.na(unenriched_metadata$Condition))
 unenriched_metadata$Condition[is.na(unenriched_metadata$Condition)] <- paste0("NA_VALUE_", seq_len(n_na))
 
-# Load in the Phosphorylation Metadata
+# Load in the Phosphorylation Metadata - had to add an "h" to one of the "tech" in phos metadata
 phos_metadata <- read_excel(paste0(data_path, "/", file_name), sheet = sheet3)
 
 # Make the Animal IDs for the controls unique
@@ -96,6 +96,7 @@ for (i in 1:nrow(unenriched_metadata)){
 }
 
 ```
+
 ## PCA of unenriched abundances
 ```{r}
 
@@ -149,19 +150,28 @@ pca_df <- pca_df %>%
 # Filter out rows where 'group' contains 'lono'
 pca_df <- pca_df %>% filter(!grepl("lono", animal))
 
+# Add in animal codes
+pca_df$animal <- gsub("hoku", "63H4", pca_df$animal)
+pca_df$animal <- gsub("kolohe", "6JK5", pca_df$animal)
+pca_df$animal <- gsub("liho", "01L5", pca_df$animal)
+pca_df$animal <- gsub("nainoa", "9ON6", pca_df$animal)
+
+# Replace weird codes for QC
+pca_df$trialtype <- gsub("NA", "QC", pca_df$trialtype)
+
 # Now, use ggplot2 for a more customized PCA plot
 ggplot(pca_df, aes(x = PC1, y = PC2, color = animal, shape = trialtype)) +
-  geom_point(size = 5, alpha = 0.8) +
+  geom_point(size = 3, alpha = 0.8) +
   labs(title = "PCA of Protein Abundance Data", x = "PC1", y = "PC2") +
-  scale_color_manual(values = c('hoku' = '#CC6677',
+  scale_color_manual(values = c('63H4' = '#CC6677',
                                 #'hoku231019' = '#CC6699',
-                                'kolohe' = '#DDCC77',
+                                '6JK5' = '#DDCC77',
                                 #'kolohe231016' = '#DDCC22',
-                                'liho' = '#117733',
+                                '01L5' = '#117733',
                                 #'liho231018' = '#116655',
                                 #'lono231009' = '#6699CC',
                                 #'lono231016' = '#6688CC',
-                                'nainoa' = '#EE8866',
+                                '9ON6' = '#EE8866',
                                 #'nainoa231016' = '#EE8888',
                                 'SPQC' = 'black'), name = "Animal") +  
     scale_shape_manual(values = c(15, 16, 17, 0, 1, 2, 3, 4, 5, 6), name = "Trial Type") +  # Manually assign the shapes
@@ -171,13 +181,17 @@ ggplot(pca_df, aes(x = PC1, y = PC2, color = animal, shape = trialtype)) +
   theme(
     # Adding black box around the plot
     #plot.background = element_rect(color = "black", fill = NA, size = 1), # border size and color
-    panel.border = element_rect(color = "black", fill = NA, size = 1) # border around the plot area (panel)
+    panel.border = element_rect(color = "black", fill = NA, size = 1), # border around the plot area (panel)
+    legend.spacing = unit(0.05, "lines"),  # Adjust spacing between legend entries
+    legend.key.size = unit(0.4, "cm"),   # Adjust the size of the legend key
+    legend.title = element_text(size = 10), # Adjust the legend title size
+    legend.text = element_text(size = 8)   # Adjust the legend text size
   )
 
 filename <- "PCA_unenrichedabundances"
   
  # Save the plot (for example, as a PNG)
-ggsave(paste0(fig_path, "/", filename, ".png"), units="in", width = 8, height = 6, dpi = 600, bg = "white")
+ggsave(paste0(fig_path, "/", filename, ".png"), units="in", width = 5, height = 3, dpi = 600, bg = "white")
 cat(paste("File", filename, "has been saved.\n"))
 
 ```
@@ -228,7 +242,7 @@ phos_filtered <- phos_filtered %>% mutate(Animal = str_extract(Sample, "^\\D+"))
 
 ```
 
-## PCA of unenriched abundances
+## PCA of phosphoenriched abundances
 ```{r}
 
 # Step 1: Make one column (e.g., 'ID') the new header
@@ -279,25 +293,29 @@ pca_df <- pca_df %>%
 pca_df <- pca_df %>% filter(!grepl("lono", animal))
 
 # Add in animal codes
-data$name <- gsub("hoku", "OH39", data$name)
-data$name <- gsub("hoku", "OH39", data$name)
-data$name <- gsub("hoku", "OH39", data$name)
-data$name <- gsub("hoku", "OH39", data$name)
+pca_df$animal <- gsub("hoku", "63H4", pca_df$animal)
+pca_df$animal <- gsub("kolohe", "6JK5", pca_df$animal)
+pca_df$animal <- gsub("liho", "01L5", pca_df$animal)
+pca_df$animal <- gsub("nainoa", "9ON6", pca_df$animal)
+
+# Replace weird codes for QC
+pca_df$trialtype <- gsub("prep", "QC1", pca_df$trialtype)
+pca_df$trialtype <- gsub("tech", "QC2", pca_df$trialtype)
 
 
 # Now, use ggplot2 for a more customized PCA plot
 ggplot(pca_df, aes(x = PC1, y = PC2, color = animal, shape = trialtype)) +
-  geom_point(size = 5, alpha = 0.8) +
+  geom_point(size = 3, alpha = 0.8) +
   labs(title = "PCA of Phospho-Enriched Data", x = "PC1", y = "PC2") +
-  scale_color_manual(values = c('hoku' = '#CC6677',
+  scale_color_manual(values = c('63H4' = '#CC6677',
                                 #'hoku231019' = '#CC6699',
-                                'kolohe' = '#DDCC77',
+                                '6JK5' = '#DDCC77',
                                 #'kolohe231016' = '#DDCC22',
-                                'liho' = '#117733',
+                                '01L5' = '#117733',
                                 #'liho231018' = '#116655',
                                 #'lono231009' = '#6699CC',
                                 #'lono231016' = '#6688CC',
-                                'nainoa' = '#EE8866',
+                                '9ON6' = '#EE8866',
                                 #'nainoa231016' = '#EE8888',
                                 'SPQC' = 'black'), name = "Animal") +  
   scale_shape_manual(values = c(15, 16, 17, 0, 1, 2, 3, 4, 5, 6), name = "Trial Type") +  # Manually assign the shapes
@@ -307,13 +325,18 @@ ggplot(pca_df, aes(x = PC1, y = PC2, color = animal, shape = trialtype)) +
   theme(
     # Adding black box around the plot
     #plot.background = element_rect(color = "black", fill = NA, size = 1), # border size and color
-    panel.border = element_rect(color = "black", fill = NA, size = 1) # border around the plot area (panel)
+    
+    panel.border = element_rect(color = "black", fill = NA, size = 1), # border around the plot area (panel)
+    legend.spacing = unit(0.05, "lines"),  # Adjust spacing between legend entries
+    legend.key.size = unit(0.4, "cm"),   # Adjust the size of the legend key
+    legend.title = element_text(size = 10), # Adjust the legend title size
+    legend.text = element_text(size = 8)   # Adjust the legend text size
   )
 
 filename <- "PCA_phosphoenriched"
   
  # Save the plot (for example, as a PNG)
-ggsave(paste0(fig_path, "/", filename, ".png"), units="in", width = 8, height = 6, dpi = 600, bg = "white")
+ggsave(paste0(fig_path, "/", filename, ".png"), units="in", width = 5, height = 3, dpi = 600, bg = "white")
 cat(paste("File", filename, "has been saved.\n"))
 
 ```
