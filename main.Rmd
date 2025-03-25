@@ -16,6 +16,9 @@ library(readxl)
 library(stringr)
 library(dplyr)
 
+# Set home for figures
+fig_path = "C:/Users/ashle/Dropbox/Ashley/Post-Doc/Projects/DQO preconditioning/figs"
+
 ```
 
 ```{r  include=FALSE}
@@ -91,6 +94,91 @@ for (i in 1:nrow(unenriched_metadata)){
 }
 
 ```
+## PCA of unenriched abundances
+```{r}
+
+# Step 1: Make one column (e.g., 'ID') the new header
+new_header <- unenriched_abundances$PG.ProteinNames # Take the values of the 'ID' column
+unenriched_abundances_t <- unenriched_abundances[, -c(1, 2, 3)]  # Remove the 'ID' column from the original data frame
+
+# Select only columns that contain "PGQ" in the name
+unenriched_abundances_t <- unenriched_abundances_t[, grep("PGQ", colnames(unenriched_abundances_t))]
+
+# Step 2: Transpose the data frame
+unenriched_abundances_t <- t(unenriched_abundances_t)
+
+# Step 3: Set the new header
+colnames(unenriched_abundances_t) <- new_header
+
+# Step 4: Convert the transposed matrix back to a data frame & to numeric entries
+unenriched_abundances_t <- as.data.frame(unenriched_abundances_t)
+unenriched_abundances_t[] <- lapply(unenriched_abundances_t, as.numeric)
+
+# Step 5: Impute NaNs with column medians
+# Impute with column medians
+unenriched_abundances_t <- unenriched_abundances_t
+for (i in 1:ncol(unenriched_abundances_t)) {
+  unenriched_abundances_t[is.na(unenriched_abundances_t[, i]), i] <- 0
+}
+
+# Step 6: Run PCA on the numeric abundance data
+pca_result <- prcomp(unenriched_abundances_t, scale. = TRUE)
+
+# Step 7: Check the summary of PCA result to view the variance explained by each principal component
+#summary(pca_result)
+
+# Step 8: Visualize the first two principal components in a biplot
+# This plot shows how each sample (row) is positioned based on the first two principal components
+#biplot(pca_result)
+
+# Step 9: Create a PCA plot with points colored by the Protein Group if available
+# First, add the PG.ProteinGroups as a factor variable to the PCA results
+pca_df <- data.frame(pca_result$x)  # Extract the PCA scores for the samples
+
+# Extract the rownames and add them as a variable to the PCA output
+row_names <- rownames(unenriched_abundances_t)
+pca_df <- pca_df %>%
+  mutate(animal = str_extract(row_names, "^[^0-9]*")) %>%
+  mutate(animalday = sub("([^_]+).*", "\\1", row_names)) %>%
+  mutate(trialtype = str_extract(row_names, "^[^_]+_([^_]+)")) %>%
+  mutate(trialtype = sub("^[^_]+_", "", trialtype)) %>%
+  filter(trialtype != "PC6B")
+
+# Filter out rows where 'group' contains 'lono'
+pca_df <- pca_df %>% filter(!grepl("lono", animal))
+
+# Now, use ggplot2 for a more customized PCA plot
+ggplot(pca_df, aes(x = PC1, y = PC2, color = animal, shape = trialtype)) +
+  geom_point(size = 5, alpha = 0.8) +
+  labs(title = "PCA of Protein Abundance Data", x = "PC1", y = "PC2") +
+  scale_color_manual(values = c('hoku' = '#CC6677',
+                                #'hoku231019' = '#CC6699',
+                                'kolohe' = '#DDCC77',
+                                #'kolohe231016' = '#DDCC22',
+                                'liho' = '#117733',
+                                #'liho231018' = '#116655',
+                                #'lono231009' = '#6699CC',
+                                #'lono231016' = '#6688CC',
+                                'nainoa' = '#EE8866',
+                                #'nainoa231016' = '#EE8888',
+                                'SPQC' = 'black'), name = "Animal") +  
+    scale_shape_manual(values = c(15, 16, 17, 0, 1, 2, 3, 4, 5, 6), name = "Trial Type") +  # Manually assign the shapes
+  theme_minimal() +
+   geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 1) +  # Dotted horizontal line at y = 0
+  geom_vline(xintercept = 0, linetype = "dotted", color = "black", size = 1) + 
+  theme(
+    # Adding black box around the plot
+    #plot.background = element_rect(color = "black", fill = NA, size = 1), # border size and color
+    panel.border = element_rect(color = "black", fill = NA, size = 1) # border around the plot area (panel)
+  )
+
+filename <- "PCA_unenrichedabundances"
+  
+ # Save the plot (for example, as a PNG)
+ggsave(paste0(fig_path, "/", filename, ".png"), units="in", width = 8, height = 6, dpi = 600, bg = "white")
+cat(paste("File", filename, "has been saved.\n"))
+
+```
 
 ## Load in the filtered phosphoprotein dataset
 ```{r}
@@ -135,6 +223,96 @@ phos_filtered <- phos_filtered %>% mutate(Animal = str_extract(Sample, "^\\D+"))
   dplyr::select(-Sample) %>%
   dplyr::select(Gene, Animal, Condition, Date, Value)
   
+
+```
+
+## PCA of unenriched abundances
+```{r}
+
+# Step 1: Make one column (e.g., 'ID') the new header
+new_header <- phos_filtered$PG.ProteinAccessions # Take the values of the 'ID' column
+phos_filtered_t <- phos_filtered[, -c(1, 2, 3, 4, 5)]  # Remove the 'ID' column from the original data frame
+
+# Step 2: Transpose the data frame
+phos_filtered_t <- t(phos_filtered_t)
+
+# Step 3: Set the new header
+colnames(phos_filtered_t) <- new_header
+
+# Step 4: Convert the transposed matrix back to a data frame & to numeric entries
+phos_filtered_t <- as.data.frame(phos_filtered_t)
+phos_filtered_t[] <- lapply(phos_filtered_t, as.numeric)
+
+# Step 5: Impute NaNs with column medians
+# Impute with column medians
+phos_filtered_t <- phos_filtered_t
+for (i in 1:ncol(phos_filtered_t)) {
+  phos_filtered_t[is.na(phos_filtered_t[, i]), i] <- 0
+}
+
+# Step 6: Run PCA on the numeric abundance data
+pca_result <- prcomp(phos_filtered_t, scale. = TRUE)
+
+# Step 7: Check the summary of PCA result to view the variance explained by each principal component
+#summary(pca_result)
+
+# Step 8: Visualize the first two principal components in a biplot
+# This plot shows how each sample (row) is positioned based on the first two principal components
+#biplot(pca_result)
+
+# Step 9: Create a PCA plot with points colored by the Protein Group if available
+# First, add the PG.ProteinGroups as a factor variable to the PCA results
+pca_df <- data.frame(pca_result$x)  # Extract the PCA scores for the samples
+
+# Extract the rownames and add them as a variable to the PCA output
+row_names <- rownames(phos_filtered_t)
+pca_df <- pca_df %>%
+  mutate(animal = str_extract(row_names, "^[^0-9]*")) %>%
+  mutate(animalday = sub("([^_]+).*", "\\1", row_names)) %>%
+  mutate(trialtype = str_extract(row_names, "^[^_]+_([^_]+)")) %>%
+  mutate(trialtype = sub("^[^_]+_", "", trialtype))%>%
+  filter(trialtype != "PC6B")
+
+# Filter out rows where 'group' contains 'lono'
+pca_df <- pca_df %>% filter(!grepl("lono", animal))
+
+# Add in animal codes
+data$name <- gsub("hoku", "OH39", data$name)
+data$name <- gsub("hoku", "OH39", data$name)
+data$name <- gsub("hoku", "OH39", data$name)
+data$name <- gsub("hoku", "OH39", data$name)
+
+
+# Now, use ggplot2 for a more customized PCA plot
+ggplot(pca_df, aes(x = PC1, y = PC2, color = animal, shape = trialtype)) +
+  geom_point(size = 5, alpha = 0.8) +
+  labs(title = "PCA of Phospho-Enriched Data", x = "PC1", y = "PC2") +
+  scale_color_manual(values = c('hoku' = '#CC6677',
+                                #'hoku231019' = '#CC6699',
+                                'kolohe' = '#DDCC77',
+                                #'kolohe231016' = '#DDCC22',
+                                'liho' = '#117733',
+                                #'liho231018' = '#116655',
+                                #'lono231009' = '#6699CC',
+                                #'lono231016' = '#6688CC',
+                                'nainoa' = '#EE8866',
+                                #'nainoa231016' = '#EE8888',
+                                'SPQC' = 'black'), name = "Animal") +  
+  scale_shape_manual(values = c(15, 16, 17, 0, 1, 2, 3, 4, 5, 6), name = "Trial Type") +  # Manually assign the shapes
+  theme_minimal() +
+   geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 1) +  # Dotted horizontal line at y = 0
+  geom_vline(xintercept = 0, linetype = "dotted", color = "black", size = 1) + 
+  theme(
+    # Adding black box around the plot
+    #plot.background = element_rect(color = "black", fill = NA, size = 1), # border size and color
+    panel.border = element_rect(color = "black", fill = NA, size = 1) # border around the plot area (panel)
+  )
+
+filename <- "PCA_phosphoenriched"
+  
+ # Save the plot (for example, as a PNG)
+ggsave(paste0(fig_path, "/", filename, ".png"), units="in", width = 8, height = 6, dpi = 600, bg = "white")
+cat(paste("File", filename, "has been saved.\n"))
 
 ```
 
