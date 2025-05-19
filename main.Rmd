@@ -3,6 +3,8 @@ title: "main"
 author: "Ashley Blawas"
 date: '2024-06-13'
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -144,126 +146,6 @@ phos_filtered <- phos_filtered %>% mutate(Animal = str_extract(Sample, "^\\D+"))
   mutate(Condition = sub("^[^_]*_([^_]*).*", "\\1", Sample)) %>%
   dplyr::select(-Sample) %>%
   dplyr::select(Gene, Animal, Condition, Date, Value)
-```
-
-# Choose a gene to test
-```{r}
-#Testing HBA
-phos_filtered %>% filter(Gene == "HBA") %>%
-  group_by(Animal, Condition) %>%
-  summarize(MaxValue = max(Value)) %>%
-  ungroup() %>%
-  ggplot(aes(x=Condition, y = MaxValue)) +
-  facet_wrap(vars(Animal), scales = "free") +
-  geom_point()
-```
-
-```{r}
-#NEW CECE
-#Testing FGA
-phos_filtered %>% filter(Gene == "FGA") %>%
-  group_by(Animal, Condition) %>%
-  summarize(MaxValue = max(Value)) %>%
-  ungroup() %>%
-  ggplot(aes(x=Condition, y = MaxValue)) +
-  facet_wrap(vars(Animal), scales = "free") +
-  geom_point()
-```
-
-```{r}
-#NEW CECE
-#Testing KNG1
-phos_filtered %>% filter(Gene == "KNG1") %>%
-  group_by(Animal, Condition) %>%
-  summarize(MaxValue = max(Value)) %>%
-  ungroup() %>%
-  ggplot(aes(x=Condition, y = MaxValue)) +
-  facet_wrap(vars(Animal), scales = "free") +
-  geom_point()
-```
-
-```{r}
-#NEW CECE
-#Testing RHAG
-phos_filtered %>% filter(Gene == "RHAG") %>%
-  group_by(Animal, Condition) %>%
-  summarize(MaxValue = max(Value)) %>%
-  ungroup() %>%
-  ggplot(aes(x=Condition, y = MaxValue)) +
-  facet_wrap(vars(Animal), scales = "free") +
-  geom_point()
-```
-
-```{r}
-#NEW CECE
-#Testing FN1
-phos_filtered %>% filter(Gene == "FN1") %>%
-  group_by(Animal, Condition) %>%
-  summarize(MaxValue = max(Value)) %>%
-  ungroup() %>%
-  ggplot(aes(x=Condition, y = MaxValue)) +
-  facet_wrap(vars(Animal), scales = "free") +
-  geom_point()
-```
-
-```{r}
-#NEW CECE
-#Testing CFL1
-phos_filtered %>% filter(Gene == "CFL1") %>%
-  group_by(Animal, Condition) %>%
-  summarize(MaxValue = max(Value)) %>%
-  ungroup() %>%
-  ggplot(aes(x=Condition, y = MaxValue)) +
-  facet_wrap(vars(Animal), scales = "free") +
-  geom_point()
-```
-
-```{r}
-#NEW CECE
-#Testing SERPINF2
-phos_filtered %>% filter(Gene == "SERPINF2") %>%
-  group_by(Animal, Condition) %>%
-  summarize(MaxValue = max(Value)) %>%
-  ungroup() %>%
-  ggplot(aes(x=Condition, y = MaxValue)) +
-  facet_wrap(vars(Animal), scales = "free") +
-  geom_point()
-```
-
-```{r}
-#NEW CECE
-#Testing SPTB
-phos_filtered %>% filter(Gene == "SPTB") %>%
-  group_by(Animal, Condition) %>%
-  summarize(MaxValue = max(Value)) %>%
-  ungroup() %>%
-  ggplot(aes(x=Condition, y = MaxValue)) +
-  facet_wrap(vars(Animal), scales = "free") +
-  geom_point()
-```
-
-```{r}
-#NEW CECE
-#Testing SLC43A1
-phos_filtered %>% filter(Gene == "SLC43A1") %>%
-  group_by(Animal, Condition) %>%
-  summarize(MaxValue = max(Value)) %>%
-  ungroup() %>%
-  ggplot(aes(x=Condition, y = MaxValue)) +
-  facet_wrap(vars(Animal), scales = "free") +
-  geom_point()
-```
-
-```{r}
-#NEW CECE
-#Testing SPTB
-phos_filtered %>% filter(Gene == "SPTB") %>%
-  group_by(Animal, Condition) %>%
-  summarize(MaxValue = max(Value)) %>%
-  ungroup() %>%
-  ggplot(aes(x=Condition, y = MaxValue)) +
-  facet_wrap(vars(Animal), scales = "free") +
-  geom_point()
 ```
 
 # Look at change between time point A & C and C & D
@@ -486,6 +368,8 @@ heatmap_data_filtered <- heatmap_data_filtered %>%
 ```
 
 ```{r}
+library(reshape2) 
+
 # Reshape data into long format
 heatmap_data_filtered_long <- melt(heatmap_data_filtered, id.vars = "PG.Genes", variable.name = "Condition", value.name = "Value")
 ```
@@ -534,7 +418,7 @@ heatmap_data_filtered_copy_long <- melt(heatmap_data_filtered_copy, id.vars = "N
 heatmap_data_filtered_copy_long_test <- heatmap_data_filtered_copy_long[c(1, 56, 102, 546, 8336, 8391, 13040), ]
 
 #Creating the heat map
-heatmap_plot <- ggplot(heatmap_data_filtered_copy_long_test, aes(x = Condition, y = `New_Gene_Name`, fill = factor(Value))) +
+heatmap_plot <- ggplot(heatmap_data_filtered_copy_long, aes(x = Condition, y = `New_Gene_Name`, fill = factor(Value))) +
   geom_tile(color = "white", linewidth = 1) + 
   scale_fill_manual(values = c("1" = "blue", "2" = "white", "4" = "red")) + 
   labs(title = "Gene Expression Heatmap", x = "Condition", y = "Gene", fill = "Value") +
@@ -542,4 +426,3037 @@ heatmap_plot <- ggplot(heatmap_data_filtered_copy_long_test, aes(x = Condition, 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 print(heatmap_plot)
+
+ggsave("plot.png", plot = last_plot(), width = 100, height = 150, units = "in", dpi = 300, limitsize=FALSE)
+```
+#Filtered data to get rid of between 0.5 and 2 & setting up for heat map
+```{r}
+library(dplyr)
+
+#filtered_heatmap_ <- read_excel("NEW_Filtered_HeatMap.xlsx")
+#now loaded in as NEW_Filtered_HeatMap
+
+NEW_Filtered_HeatMap <- NEW_Filtered_HeatMap[, c("PG.Genes", "Differential of Kolohe Control C/A", "Differential of Hoku Control C/A", "Differential of Kolohe PC6 C/A", "Differential of Hoku PC6 C/A")]
+
+NEW_Filtered_HeatMap$`Differential of Kolohe Control C/A` <- as.numeric(NEW_Filtered_HeatMap$`Differential of Kolohe Control C/A`)
+
+NEW_Filtered_HeatMap$`Differential of Kolohe PC6 C/A` <- as.numeric(NEW_Filtered_HeatMap$`Differential of Kolohe PC6 C/A`)
+
+NEW_Filtered_HeatMap$`Differential of Hoku Control C/A` <- as.numeric(NEW_Filtered_HeatMap$`Differential of Hoku Control C/A`)
+
+NEW_Filtered_HeatMap$`Differential of Hoku PC6 C/A` <- as.numeric(NEW_Filtered_HeatMap$`Differential of Hoku PC6 C/A`)
+
+#xtrafiltered_heatmap <- NEW_Filtered_HeatMap %>%
+#  filter(`Differential of Kolohe Control C/A` <= 0.5 | `Differential of Kolohe Control C/A` >= 2)
+
+xtrafiltered_heatmap <- NEW_Filtered_HeatMap %>%
+  filter((`Differential of Kolohe Control C/A` <= 0.5 | `Differential of Kolohe Control C/A` >= 2) | (`Differential of Kolohe PC6 C/A` <= 0.5 | `Differential of Kolohe PC6 C/A` >= 2) | (`Differential of Hoku Control C/A` <= 0.5 | `Differential of Hoku Control C/A` >= 2) | (`Differential of Hoku PC6 C/A` <= 0.5 | `Differential of Hoku PC6 C/A` >= 2))
+
+# Replace NA values in the PG.Genes column with "PRSS1"
+xtrafiltered_heatmap$`PG.Genes`[is.na(xtrafiltered_heatmap$`PG.Genes`)] <- "PRSS1"
+
+# Initialize a counter and a vector to store the modified gene names
+counter_ <- 1
+modified_genes_ <- character(length(xtrafiltered_heatmap$`PG.Genes`))
+
+# Iterate through the 'gene' column and modify the gene names
+for (i in 1:length(xtrafiltered_heatmap$`PG.Genes`)) {
+  if (i == 1 || xtrafiltered_heatmap$`PG.Genes`[i] != xtrafiltered_heatmap$`PG.Genes`[i - 1]) {
+    counter_ <- 1  # Reset counter when a new gene is encountered
+  }
+  modified_genes_[i] <- paste(xtrafiltered_heatmap$`PG.Genes`[i], counter_, sep = ".")
+  counter_ <- counter_ + 1  # Increment counter for each instance of the same gene
+}
+
+# Add the modified gene names to the dataframe
+xtrafiltered_heatmap$modified_gene_ <- modified_genes_
+
+xtrafiltered_heatmap$`PG.Genes` <- NULL
+```
+
+#Make heatmap for rows 1-200 in dataset
+```{r}
+# Make a dataset with only the first 200 rows
+xtrafiltered_heatmap_1_to_200 <- xtrafiltered_heatmap[1:200, ]
+
+# Reshape data into long format
+library(reshape2)
+#xtrafiltered_heatmap_long <- melt(xtrafiltered_heatmap, id.vars = "modified_gene_", #variable.name = "Condition", value.name = "Value")
+xtrafiltered_heatmap_1_to_200_long <- melt(xtrafiltered_heatmap_1_to_200, id.vars = "modified_gene_", variable.name = "Condition", value.name = "Value")
+
+
+#Creating the heat map
+library(ggplot2)
+#heatmap_plot <- ggplot(xtrafiltered_heatmap_long, aes(x = Condition, y = `modified_gene_`, fill = cut(value, breaks = c(-Inf, 0.5, 2, Inf), labels = c("blue", "white", "red")))) +
+#  geom_tile(color = "white", linewidth = 1) + 
+#  scale_fill_manual(values = c("blue" = "blue", "white" = "white", "red" = "red")) + 
+#  labs(title = "Gene Expression Heatmap", x = "Condition", y = "Gene", fill = "Value") +
+#  theme_minimal() +
+#  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Custom labels for the X-axis
+custom_labels <- c("Differential of Kolohe Control C/A" = "Kolohe Control", "Differential of Hoku Control C/A" = "Hoku Control", "Differential of Kolohe PC6 C/A" = "Kolohe PC6", "Differential of Hoku PC6 C/A" = "Hoku PC6")
+
+ggplot(xtrafiltered_heatmap_1_to_200_long, aes(x = Condition, y = modified_gene_, fill = cut(Value, breaks = c(-Inf, 0.5, 2, Inf), 
+                                          labels = c("blue", "white", "red")))) +
+  geom_tile() +  # geom_tile for heatmap
+  scale_fill_manual(values = c("blue" = "blue", "white" = "white", "red" = "red")) +
+  theme_minimal() +
+  labs(title = "Heatmap with custom colors based on value ranges") +
+  scale_x_discrete(labels = custom_labels) +  # Change X-axis labels
+  theme(axis.text.x = element_text(size = 5, angle = 90, vjust = 0.5, hjust = 1)) + #make x-axis text vertical
+  theme(axis.text.y = element_text(size = 5, angle = 45, vjust = 0.5))
+
+#need to cluster
+```
+
+#Make heatmap for rows 201-400 in dataset
+```{r}
+# Make a dataset with only rows 201-400
+xtrafiltered_heatmap_201_to_400 <- xtrafiltered_heatmap[201:400, ]
+
+# Perform hierarchical clustering on rows (Y-axis)
+# Attempt at clustering
+xtrafiltered_heatmap_201_to_400[is.na(xtrafiltered_heatmap_201_to_400)] <- 0 #replacing NA with 0 to run the next 3 lines of code successfully
+row_dist <- dist(xtrafiltered_heatmap_201_to_400)  # Compute distance matrix
+row_clust <- hclust(row_dist)  # Perform hierarchical clustering
+#new_order <- rownames(xtrafiltered_heatmap_201_to_400)[row_clust$order]  # Get new row order
+new_order <- as.vector(rownames(xtrafiltered_heatmap_201_to_400)[row_clust$order])
+
+# Reorder factor levels for ggplot
+# Attempt at clustering
+xtrafiltered_heatmap_201_to_400_long$modified_gene_ <- as.character(xtrafiltered_heatmap_201_to_400_long$modified_gene_) #ensure gene columb is a character before reordering
+xtrafiltered_heatmap_201_to_400_long$modified_gene_ <- factor(xtrafiltered_heatmap_201_to_400_long$modified_gene_, levels = new_order)
+
+# Reshape data into long format
+library(reshape2)
+xtrafiltered_heatmap_201_to_400_long <- melt(xtrafiltered_heatmap_201_to_400, id.vars = "modified_gene_", variable.name = "Condition", value.name = "Value")
+
+#Creating the heat map
+library(ggplot2)
+
+# Custom labels for the X-axis
+custom_labels <- c("Differential of Kolohe Control C/A" = "Kolohe Control", "Differential of Hoku Control C/A" = "Hoku Control", "Differential of Kolohe PC6 C/A" = "Kolohe PC6", "Differential of Hoku PC6 C/A" = "Hoku PC6")
+
+ggplot(xtrafiltered_heatmap_201_to_400_long, aes(x = Condition, y = modified_gene_, fill = cut(Value, breaks = c(-Inf, 0.5, 2, Inf), 
+                                          labels = c("blue", "white", "red")))) +
+  geom_tile() +  # geom_tile for heatmap
+  scale_fill_manual(values = c("blue" = "blue", "white" = "white", "red" = "red")) +
+  theme_minimal() +
+  labs(title = "Heatmap with custom colors based on value ranges") +
+  scale_x_discrete(labels = custom_labels) +  # Change X-axis labels
+  theme(axis.text.x = element_text(size = 5, angle = 90, vjust = 0.5, hjust = 1)) + #make x-axis text vertical
+  theme(axis.text.y = element_text(size = 5, angle = 45, vjust = 0.5))
+
+#need to cluster
+```
+
+#Map heatmap for rows 201-400 in dataset in pheatmap
+```{r}
+install.packages("pheatmap")
+ 
+# load package
+library(pheatmap)
+
+# install DESeq if necessary
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+BiocManager::install("DESeq2")
+ 
+# install and load package
+library(DESeq2)
+
+# moving gene names to first column in dataset
+#xtrafiltered_heatmap_201_to_400_pheatmap <- xtrafiltered_heatmap_201_to_400[c(ncol(xtrafiltered_heatmap_201_to_400), 1:(ncol(xtrafiltered_heatmap_201_to_400)-1))] #If the column you want moved is the last column
+xtrafiltered_heatmap_201_to_400_pheatmap <- xtrafiltered_heatmap_201_to_400_pheatmap[c(2, 1, 3:ncol(xtrafiltered_heatmap_201_to_400_pheatmap))] #If the column you want moved is the 2nd column
+
+# Convert tibble to data frame
+xtrafiltered_heatmap_201_to_400_pheatmap <- as.data.frame(xtrafiltered_heatmap_201_to_400_pheatmap)
+
+# setting the first column (gene names) as row names
+rownames(xtrafiltered_heatmap_201_to_400_pheatmap) <- xtrafiltered_heatmap_201_to_400_pheatmap[, 1]
+
+# removing the first column from the data frame (since it's now row names)
+xtrafiltered_heatmap_201_to_400_pheatmap <- xtrafiltered_heatmap_201_to_400_pheatmap[, -1]
+
+# Convert Data to a Numeric Matrix
+xtrafiltered_heatmap_201_to_400_pheatmap_matrix <- as.matrix(xtrafiltered_heatmap_201_to_400_pheatmap)
+
+# Replace NAs/NaNs/Inf with zero (otherwise pheatmap will not work)
+xtrafiltered_heatmap_201_to_400_pheatmap_matrix[is.na(xtrafiltered_heatmap_201_to_400_pheatmap_matrix) | is.nan(xtrafiltered_heatmap_201_to_400_pheatmap_matrix) | is.infinite(xtrafiltered_heatmap_201_to_400_pheatmap_matrix)] <- 0
+
+xtrafiltered_heatmap_201_to_400_pheatmap_matrix <- scale(xtrafiltered_heatmap_201_to_400_pheatmap_matrix)
+
+# Generate heatmap
+pheatmap(xtrafiltered_heatmap_201_to_400_pheatmap_matrix, scale = "row")
+```
+
+#Make heatmap for rows 401-600 in dataset
+```{r}
+# Make a dataset with only rows 401-600
+xtrafiltered_heatmap_401_to_600 <- xtrafiltered_heatmap[401:600, ]
+
+# Reshape data into long format
+library(reshape2)
+xtrafiltered_heatmap_401_to_600_long <- melt(xtrafiltered_heatmap_401_to_600, id.vars = "modified_gene_", variable.name = "Condition", value.name = "Value")
+
+
+#Creating the heat map
+library(ggplot2)
+
+# Custom labels for the X-axis
+custom_labels <- c("Differential of Kolohe Control C/A" = "Kolohe Control", "Differential of Hoku Control C/A" = "Hoku Control", "Differential of Kolohe PC6 C/A" = "Kolohe PC6", "Differential of Hoku PC6 C/A" = "Hoku PC6")
+
+ggplot(xtrafiltered_heatmap_401_to_600_long, aes(x = Condition, y = modified_gene_, fill = cut(Value, breaks = c(-Inf, 0.5, 2, Inf), 
+                                          labels = c("blue", "white", "red")))) +
+  geom_tile() +  # geom_tile for heatmap
+  scale_fill_manual(values = c("blue" = "blue", "white" = "white", "red" = "red")) +
+  theme_minimal() +
+  labs(title = "Heatmap with custom colors based on value ranges") +
+  scale_x_discrete(labels = custom_labels) +  # Change X-axis labels
+  theme(axis.text.x = element_text(size = 5, angle = 90, vjust = 0.5, hjust = 1)) + #make x-axis text vertical
+  theme(axis.text.y = element_text(size = 5, angle = 45, vjust = 0.5))
+
+#need to cluster
+```
+
+#Make heatmap for rows 601-800 in dataset
+```{r}
+# Make a dataset with only rows 601-800
+xtrafiltered_heatmap_601_to_800 <- xtrafiltered_heatmap[601:800, ]
+
+# Reshape data into long format
+library(reshape2)
+xtrafiltered_heatmap_601_to_800_long <- melt(xtrafiltered_heatmap_601_to_800, id.vars = "modified_gene_", variable.name = "Condition", value.name = "Value")
+
+
+#Creating the heat map
+library(ggplot2)
+
+# Custom labels for the X-axis
+custom_labels <- c("Differential of Kolohe Control C/A" = "Kolohe Control", "Differential of Hoku Control C/A" = "Hoku Control", "Differential of Kolohe PC6 C/A" = "Kolohe PC6", "Differential of Hoku PC6 C/A" = "Hoku PC6")
+
+ggplot(xtrafiltered_heatmap_601_to_800_long, aes(x = Condition, y = modified_gene_, fill = cut(Value, breaks = c(-Inf, 0.5, 2, Inf), 
+                                          labels = c("blue", "white", "red")))) +
+  geom_tile() +  # geom_tile for heatmap
+  scale_fill_manual(values = c("blue" = "blue", "white" = "white", "red" = "red")) +
+  theme_minimal() +
+  labs(title = "Heatmap with custom colors based on value ranges") +
+  scale_x_discrete(labels = custom_labels) +  # Change X-axis labels
+  theme(axis.text.x = element_text(size = 5, angle = 90, vjust = 0.5, hjust = 1)) + #make x-axis text vertical
+  theme(axis.text.y = element_text(size = 5, angle = 45, vjust = 0.5))
+
+#need to cluster
+```
+
+#Make heatmap for rows 801-1000 in dataset
+```{r}
+# Make a dataset with only rows 801-1000
+xtrafiltered_heatmap_801_to_1000 <- xtrafiltered_heatmap[801:1000, ]
+
+# Reshape data into long format
+library(reshape2)
+xtrafiltered_heatmap_801_to_1000_long <- melt(xtrafiltered_heatmap_801_to_1000, id.vars = "modified_gene_", variable.name = "Condition", value.name = "Value")
+
+
+#Creating the heat map
+library(ggplot2)
+
+# Custom labels for the X-axis
+custom_labels <- c("Differential of Kolohe Control C/A" = "Kolohe Control", "Differential of Hoku Control C/A" = "Hoku Control", "Differential of Kolohe PC6 C/A" = "Kolohe PC6", "Differential of Hoku PC6 C/A" = "Hoku PC6")
+
+ggplot(xtrafiltered_heatmap_801_to_1000_long, aes(x = Condition, y = modified_gene_, fill = cut(Value, breaks = c(-Inf, 0.5, 2, Inf), 
+                                          labels = c("blue", "white", "red")))) +
+  geom_tile() +  # geom_tile for heatmap
+  scale_fill_manual(values = c("blue" = "blue", "white" = "white", "red" = "red")) +
+  theme_minimal() +
+  labs(title = "Heatmap with custom colors based on value ranges") +
+  scale_x_discrete(labels = custom_labels) +  # Change X-axis labels
+  theme(axis.text.x = element_text(size = 5, angle = 90, vjust = 0.5, hjust = 1)) + #make x-axis text vertical
+  theme(axis.text.y = element_text(size = 5, angle = 45, vjust = 0.5))
+
+#need to cluster
+```
+
+#Make heatmap for rows 1001-1200 in dataset
+```{r}
+# Make a dataset with only rows 1001-1200
+xtrafiltered_heatmap_1001_to_1200 <- xtrafiltered_heatmap[1001:1200, ]
+
+# Reshape data into long format
+library(reshape2)
+xtrafiltered_heatmap_1001_to_1200_long <- melt(xtrafiltered_heatmap_1001_to_1200, id.vars = "modified_gene_", variable.name = "Condition", value.name = "Value")
+
+
+#Creating the heat map
+library(ggplot2)
+
+# Custom labels for the X-axis
+custom_labels <- c("Differential of Kolohe Control C/A" = "Kolohe Control", "Differential of Hoku Control C/A" = "Hoku Control", "Differential of Kolohe PC6 C/A" = "Kolohe PC6", "Differential of Hoku PC6 C/A" = "Hoku PC6")
+
+ggplot(xtrafiltered_heatmap_1001_to_1200_long, aes(x = Condition, y = modified_gene_, fill = cut(Value, breaks = c(-Inf, 0.5, 2, Inf), 
+                                          labels = c("blue", "white", "red")))) +
+  geom_tile() +  # geom_tile for heatmap
+  scale_fill_manual(values = c("blue" = "blue", "white" = "white", "red" = "red")) +
+  theme_minimal() +
+  labs(title = "Heatmap with custom colors based on value ranges") +
+  scale_x_discrete(labels = custom_labels) +  # Change X-axis labels
+  theme(axis.text.x = element_text(size = 5, angle = 90, vjust = 0.5, hjust = 1)) + #make x-axis text vertical
+  theme(axis.text.y = element_text(size = 5, angle = 45, vjust = 0.5))
+
+#need to cluster
+```
+
+#Make heatmap for rows 1201-1400 in dataset
+```{r}
+# Make a dataset with only rows 1201-1400
+xtrafiltered_heatmap_1201_to_1400 <- xtrafiltered_heatmap[1201:1400, ]
+
+# Reshape data into long format
+library(reshape2)
+xtrafiltered_heatmap_1201_to_1400_long <- melt(xtrafiltered_heatmap_1201_to_1400, id.vars = "modified_gene_", variable.name = "Condition", value.name = "Value")
+
+
+#Creating the heat map
+library(ggplot2)
+
+# Custom labels for the X-axis
+custom_labels <- c("Differential of Kolohe Control C/A" = "Kolohe Control", "Differential of Hoku Control C/A" = "Hoku Control", "Differential of Kolohe PC6 C/A" = "Kolohe PC6", "Differential of Hoku PC6 C/A" = "Hoku PC6")
+
+ggplot(xtrafiltered_heatmap_1201_to_1400_long, aes(x = Condition, y = modified_gene_, fill = cut(Value, breaks = c(-Inf, 0.5, 2, Inf), 
+                                          labels = c("blue", "white", "red")))) +
+  geom_tile() +  # geom_tile for heatmap
+  scale_fill_manual(values = c("blue" = "blue", "white" = "white", "red" = "red")) +
+  theme_minimal() +
+  labs(title = "Heatmap with custom colors based on value ranges") +
+  scale_x_discrete(labels = custom_labels) +  # Change X-axis labels
+  theme(axis.text.x = element_text(size = 5, angle = 90, vjust = 0.5, hjust = 1)) + #make x-axis text vertical
+  theme(axis.text.y = element_text(size = 5, angle = 45, vjust = 0.5))
+
+#need to cluster
+```
+
+#Make heatmap for rows 1401-1600 in dataset
+```{r}
+# Make a dataset with only rows 1401-1600
+xtrafiltered_heatmap_1401_to_1600 <- xtrafiltered_heatmap[1401:1600, ]
+
+# Reshape data into long format
+library(reshape2)
+xtrafiltered_heatmap_1401_to_1600_long <- melt(xtrafiltered_heatmap_1401_to_1600, id.vars = "modified_gene_", variable.name = "Condition", value.name = "Value")
+
+
+#Creating the heat map
+library(ggplot2)
+
+# Custom labels for the X-axis
+custom_labels <- c("Differential of Kolohe Control C/A" = "Kolohe Control", "Differential of Hoku Control C/A" = "Hoku Control", "Differential of Kolohe PC6 C/A" = "Kolohe PC6", "Differential of Hoku PC6 C/A" = "Hoku PC6")
+
+ggplot(xtrafiltered_heatmap_1401_to_1600_long, aes(x = Condition, y = modified_gene_, fill = cut(Value, breaks = c(-Inf, 0.5, 2, Inf), 
+                                          labels = c("blue", "white", "red")))) +
+  geom_tile() +  # geom_tile for heatmap
+  scale_fill_manual(values = c("blue" = "blue", "white" = "white", "red" = "red")) +
+  theme_minimal() +
+  labs(title = "Heatmap with custom colors based on value ranges") +
+  scale_x_discrete(labels = custom_labels) +  # Change X-axis labels
+  theme(axis.text.x = element_text(size = 5, angle = 90, vjust = 0.5, hjust = 1)) + #make x-axis text vertical
+  theme(axis.text.y = element_text(size = 5, angle = 45, vjust = 0.5))
+
+#need to cluster
+```
+
+#Make heatmap for rows 1601-1755 in dataset
+```{r}
+# Make a dataset with only rows 201-400
+xtrafiltered_heatmap_1601_to_1755 <- xtrafiltered_heatmap[1601:1755, ]
+
+# Reshape data into long format
+library(reshape2)
+xtrafiltered_heatmap_1601_to_1755_long <- melt(xtrafiltered_heatmap_1601_to_1755, id.vars = "modified_gene_", variable.name = "Condition", value.name = "Value")
+
+
+#Creating the heat map
+library(ggplot2)
+
+# Custom labels for the X-axis
+custom_labels <- c("Differential of Kolohe Control C/A" = "Kolohe Control", "Differential of Hoku Control C/A" = "Hoku Control", "Differential of Kolohe PC6 C/A" = "Kolohe PC6", "Differential of Hoku PC6 C/A" = "Hoku PC6")
+
+ggplot(xtrafiltered_heatmap_1601_to_1755_long, aes(x = Condition, y = modified_gene_, fill = cut(Value, breaks = c(-Inf, 0.5, 2, Inf), 
+                                          labels = c("blue", "white", "red")))) +
+  geom_tile() +  # geom_tile for heatmap
+  scale_fill_manual(values = c("blue" = "blue", "white" = "white", "red" = "red")) +
+  theme_minimal() +
+  labs(title = "Heatmap with custom colors based on value ranges") +
+  scale_x_discrete(labels = custom_labels) +  # Change X-axis labels
+  theme(axis.text.x = element_text(size = 5, angle = 90, vjust = 0.5, hjust = 1)) + #make x-axis text vertical
+  theme(axis.text.y = element_text(size = 5, angle = 45, vjust = 0.5))
+
+#need to cluster
+```
+
+#PHEATMAP Heatmap
+#TRY RUNNING FOR P-SITES THAT WERE UPREGULATED OR DOWNREGULATED SIMILARILY IN ALL TRIALS!
+```{r}
+#Loading libraries
+library(dplyr)
+library(pheatmap)
+library(DESeq2)
+library(RColorBrewer)
+
+#Loaded Pheatmap_Excel into R
+
+#Making all the variables numeric except gene names
+Pheatmap_Excel$`Differential of Kolohe Control C/A` <- as.numeric(Pheatmap_Excel$`Differential of Kolohe Control C/A`)
+Pheatmap_Excel$`Differential of Hoku Control C/A` <- as.numeric(Pheatmap_Excel$`Differential of Hoku Control C/A`)
+Pheatmap_Excel$`Differential of Liho Control C/A` <- as.numeric(Pheatmap_Excel$`Differential of Liho Control C/A`)
+Pheatmap_Excel$`Differential of Nainoa Control C/A` <- as.numeric(Pheatmap_Excel$`Differential of Nainoa Control C/A`)
+Pheatmap_Excel$`Differential of Lono Control C/A` <- as.numeric(Pheatmap_Excel$`Differential of Lono Control C/A`)
+Pheatmap_Excel$`Differential of Kolohe PC6 C/A` <- as.numeric(Pheatmap_Excel$`Differential of Kolohe PC6 C/A`)
+Pheatmap_Excel$`Differential of Hoku PC6 C/A` <- as.numeric(Pheatmap_Excel$`Differential of Hoku PC6 C/A`)
+
+#Filtering out phosphosites that do not have any significant regulation in any sample
+Pheatmap_Excel_1.0 <- Pheatmap_Excel %>%
+  filter((`Differential of Kolohe Control C/A` <= 0.5 | `Differential of Kolohe Control C/A` >= 2) | (`Differential of Hoku Control C/A` <= 0.5 | `Differential of Hoku Control C/A` >= 2) | (`Differential of Liho Control C/A` <= 0.5 | `Differential of Liho Control C/A` >= 2) | (`Differential of Nainoa Control C/A` <= 0.5 | `Differential of Nainoa Control C/A` >= 2) | (`Differential of Lono Control C/A` <= 0.5 | `Differential of Lono Control C/A` >= 2) | (`Differential of Kolohe PC6 C/A` <= 0.5 | `Differential of Kolohe PC6 C/A` >= 2) | (`Differential of Hoku PC6 C/A` <= 0.5 | `Differential of Hoku PC6 C/A` >= 2))
+
+#Modify the gene names to be unique by adding numerical counts to the end of the gene name
+counter_ <- 1 # initialize a counter
+gene <- character(length(Pheatmap_Excel_1.0$`PG.Genes`)) # initialize a vector to store the modified gene names
+
+for (i in 1:length(Pheatmap_Excel_1.0$`PG.Genes`)) { # iterate through the 'gene' column and modify the names
+  if (i == 1 || Pheatmap_Excel_1.0$`PG.Genes`[i] != Pheatmap_Excel_1.0$`PG.Genes`[i - 1]) {
+    counter_ <- 1  # reset counter when a new gene is encountered
+  }
+  gene[i] <- paste(Pheatmap_Excel_1.0$`PG.Genes`[i], counter_, sep = ".")
+  counter_ <- counter_ + 1  # increment counter for each instance of the same gene
+}
+
+Pheatmap_Excel_1.0$gene <- gene # add the modified gene names to the dataframe
+Pheatmap_Excel_1.0$`PG.Genes` <- NULL # remove the old column
+
+Pheatmap_Excel_1.0 <- Pheatmap_Excel_1.0[c(ncol(Pheatmap_Excel_1.0), 1:(ncol(Pheatmap_Excel_1.0)-1))] # moving gene names to first column in dataset; CANNOT RUN THIS AGAIN OR WILL MESS UP ORDERING
+
+#Setting up data for pheatmap
+Pheatmap_Excel_2.0 <- as.data.frame(Pheatmap_Excel_1.0) # convert tibble to data frame
+rownames(Pheatmap_Excel_2.0) <- Pheatmap_Excel_2.0[, 1] # setting the first column (gene names) as row names
+Pheatmap_Excel_2.0 <- Pheatmap_Excel_2.0[, -1] # removing the first column from the data frame (since it's now row names)
+Pheatmap_Excel_3.0 <- as.matrix(Pheatmap_Excel_2.0) # convert Data to a Numeric Matrix
+Pheatmap_Excel_3.0[is.na(Pheatmap_Excel_3.0) | is.nan(Pheatmap_Excel_3.0) | is.infinite(Pheatmap_Excel_3.0)] <- 0 # replace NAs/NaNs/Inf with zero (otherwise pheatmap will not work)
+
+#Group row annotations together at top of heatmap - THIS DOES NOT WORK BC THE ROWS ARE REARRANGED BY CLUSTERING WHEN PLOTTING PHEATMAP ANYWAYS
+#inflammation_genes <- c("APOA1.1","APOA1.2", "CAMK1D.1", "CAMK1D.2", "CAMK1D.3", "CAMK1D.4", "CAMK1D.5", "CAMK1D.6","CLU.1", "FN1.1", "FN1.2", "FN1.3", "FN1.4", "FN1.5", "FN1.6", "GC.1", "GC.2", "GIT1.1", "GIT1.2", "GIT1.3", "GIT1.4", "GIT1.5", "GIT1.6","GPX1.1", "IL16.1", "IL16.2", "ITIH4.1", "ITIH4.2", "LAT.1", "LAT.2", "LAT.3", "PLCG2.1", "PLCG2.2", "PLCG2.3", "PLCG2.4", "PLCG2.5", "RAB44.1", "RAB44.2", "RAB44.3", "RAB44.4", "RHBDF2.1", "RHBDF2.2", "SELP.1", "SELP.2", "SYK.1", "SYK.2", "TMSB4X.1", "TMSB4X.2", "TMSB4X.3", "TMSB4X.4", "TMSB4X.5", "TMSB4X.6", "TMSB4X.7", "TMSB4X.8", "ZDHHC5.1", "ZDHHC5.2", "ZDHHC5.3", "ZDHHC5.4", "ZDHHC5.5", "ZDHHC5.6", "ZDHHC5.7", "ZDHHC5.8", "ZDHHC5.9", "ZDHHC5.10")
+#Pheatmap_Excel_3.0_reordered <- Pheatmap_Excel_3.0[c(inflammation_genes, setdiff(rownames(Pheatmap_Excel_3.0), inflammation_genes)), ]
+
+#Column annotations
+annotation_col <- data.frame(
+  Condition = factor(c("control", "control", "control", 
+                       "control", "control", "preconditioning", "preconditioning")),
+  Individual = factor(c("Kolohe", "Hoku", "Liho", "Nainoa", "Lono", "Kolohe", "Hoku"))
+)
+rownames(annotation_col) <- colnames(Pheatmap_Excel_3.0)
+
+#Row annotations
+annotation_row <- data.frame(
+  Pathway = case_when(
+    rownames(Pheatmap_Excel_3.0) %in% c("APOA1.1","APOA1.2", "C5", "CAMK1D.1", "CAMK1D.2", "CAMK1D.3", "CAMK1D.4", "CAMK1D.5", "CAMK1D.6","CLU.1", "FN1.1", "FN1.2", "FN1.3", "FN1.4", "FN1.5", "FN1.6", "GC.1", "GC.2", "GIT1.1", "GIT1.2", "GIT1.3", "GIT1.4", "GIT1.5", "GIT1.6","GPX1.1", "IL16.1", "IL16.2", "ITIH4.1", "ITIH4.2", "LAT.1", "LAT.2", "LAT.3", "PLAA", "PLCG2.1", "PLCG2.2", "PLCG2.3", "PLCG2.4", "PLCG2.5", "RAB44.1", "RAB44.2", "RAB44.3", "RAB44.4", "RHBDF2.1", "RHBDF2.2", "SELP.1", "SELP.2", "SYK.1", "SYK.2", "TMSB4X.1", "TMSB4X.2", "TMSB4X.3", "TMSB4X.4", "TMSB4X.5", "TMSB4X.6", "TMSB4X.7", "TMSB4X.8", "ZDHHC5.1", "ZDHHC5.2", "ZDHHC5.3", "ZDHHC5.4", "ZDHHC5.5", "ZDHHC5.6", "ZDHHC5.7", "ZDHHC5.8", "ZDHHC5.9", "ZDHHC5.10") ~ "Inflammation Response",
+    rownames(Pheatmap_Excel_3.0) %in% c("BAG3.1", "BAG3.2", "BAG3.3", "BAG3.4", "BAG3.5", "BAG3.6", "CCDC88B.1", "CCDC88B.2", "CCDC88B.3", "CCDC88B.4", "CCDC88B.5", "CCDC88B.6", "CCDC88B.7", "CCDC88B.8", "CNP.1", "DOCK2.1", "FECH.1", "FGB.1", "HSF1.1", "HSF1.2", "HSF1.3", "LRCH4.1", "LRCH4.2", "MAPK1.1", "PDE12.1", "PDE12.2", "SERPINC1.1", "SLC2A1.1", "SLC2A1.2", "TREML1.1", "TREML1.2", "TREML1.3", "TREML1.4", ) ~ "Response to External Stimulus",
+    TRUE ~ "No"  # Default category for other genes
+  )
+) # define specific annotations for certain genes
+rownames(annotation_row) <- rownames(Pheatmap_Excel_3.0)
+
+# Defining colors for annotations
+annotation_colors <- list(
+  Condition = c("preconditioning" = "blue", "control" = "red"),
+  Pathway = c(`Inflammation Response` = "purple", `Response to External Stimulus` = "black", No = "gray")  
+)
+
+#Scaling
+#Pheatmap_Excel_4.0 <- scale(Pheatmap_Excel_3.0)
+#Add the above line of code and change to Pheatmap_Excel_4.0 in generate heatmap line of code
+
+#Log transforming my data
+Pheatmap_Excel_3.0_log <- log2(Pheatmap_Excel_3.0 + 1)
+
+#Changing the coloring of the values
+color_palette <- colorRampPalette(c("blue", "white", "red"))(100)  # 100 gradient colors in custom color palette
+breaks <- unique(c(seq(0, 0.5, length.out = 30),  # Blue gradient (0 to 0.5)
+                   seq(0.51, 2, length.out = 40), # White gradient (0.51 to 2)
+                   seq(2.01, max(Pheatmap_Excel_3.0_log, na.rm = TRUE), length.out = 30))) # Red gradient (2.01 to max)
+if (length(unique(breaks)) != length(breaks)) {
+  warning("Breaks contain duplicate values, adjusting...")
+  breaks <- sort(unique(breaks))  # Remove duplicates and sort
+}
+
+#Generate heatmap
+pheatmap(Pheatmap_Excel_3.0_log, clustering_distance_rows = "euclidean", 
+         clustering_distance_cols = "euclidean", color = color_palette, 
+         breaks = breaks,
+         clustering_method = "complete", show_rownames = FALSE, show_colnames = FALSE, scale = "none", annotation_col = annotation_col, annotation_row = annotation_row, annotation_colors = annotation_colors)
+
+#change color scale
+#make longer and skinnier
+#add average column to force heat map to be arranged red to blue
+#could filter dataset and to be more strict on which genes to include; maybe only filter for phosphosites (rows) that have a significant up/down regulation in both >= 1 control individuals and >= 1 preconditioning individual
+```
+
+#CONTROL CLUSTER 1 (PROFILE 7) STEM GRAPH
+```{r}
+# Libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# STEM Data was imported
+
+# Reformatted data into long format
+Profile7 <- melt(DQO_STEM_Results_Control_Trial_Profile_7, id.vars = "Protein Names", variable.name = "Stage", value.name = "n")
+
+# Convert the x-axis variable to a factor with the order as in the data file (Makes A 1st)
+Profile7$Stage <- factor(Profile7$Stage, levels = unique(Profile7$Stage))
+### Basic Plot for Profile 7 (Shows the dip at Pre-Met)
+ggplot(Profile7, aes(x= Stage, y=n, group=`Protein Names`, color=`Protein Names`)) + ylim(-6000,2000) + #should be min and max of data
+  geom_line() +
+  labs(title = "Profile 7",
+       x = "Time Point",
+       y = "Fold Change",
+       color = "Gene") +
+  theme_minimal()
+View(Profile7)
+
+# Highlight AVERAGE in Profile7
+highlight_gene <- c("AVERAGE")
+
+#Vector for Group
+group_vector_Profile7 <- ifelse(Profile7$`Protein Names` %in% highlight_gene, "Average", "Other")
+View(group_vector_Profile7)
+df_Profile7 <- as.data.frame(Profile7)
+df_Profile7$Color <- c(group_vector_Profile7)
+colnames(df_Profile7) <- c("Protein Names", "Stage", "FC", "Group")
+View(df_Profile7)
+# Ensure that the group levels are factors for colors and opacity
+#Vector for Opacity
+opacity_values <- c("Average" = 1.0, "Other" = 0.25)
+df_Profile7$Group <- factor(df_Profile7$Group, levels = names(opacity_values))
+#Vector for Colors
+color_values <- c("Average" = "red", "Other" = "grey")
+df_Profile7$Group <- factor(df_Profile7$Group, levels = names(color_values))
+# Make x-axis values numeric to change spacing
+df_Profile7$Stage_num <- recode(df_Profile7$Stage, "A" = 0, "C" = 14, "D" = 19)
+# Plot the data with the correct mapping
+Profile7_Graph <- ggplot(df_Profile7, aes(x= Stage_num, y= FC, group = `Protein Names`, alpha = Group, color = Group)) + ylim(-7000,10000) +
+  geom_line(size = 0.25) +
+  geom_line(data = subset(df_Profile7, df_Profile7$Group == "Average"), aes(color = Group), 
+            size = 0.75) +
+  geom_hline(yintercept = 0, linetype = 5, color = "black", size = .5) +
+  geom_vline(xintercept = 0, linetype = 5, color = "black", size = .5) +
+  scale_color_manual(values = c("Others" = "grey", "Average" = "red")) +
+  scale_alpha_manual(values = opacity_values) +
+  scale_x_continuous(breaks = c(0, 14, 19), labels = c("A", "C", "D")) +  # Uneven spacing
+  labs(title = "Profile 7",
+       x = "Time Point",
+       y = "Fold Change",
+       color = "Protein Names") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, hjust = 0.5),  # Center title
+        axis.text.x = element_text(size = 14),  # Adjusts the text size of the x-axis tick labels
+        axis.text.y = element_text(size = 14),  # Adjusts the text size of the y-axis tick labels
+        axis.title.x = element_text(size = 14), # Adjusts the text size of the x-axis title
+        axis.title.y = element_text(size = 14), # Adjusts the text size of the y-axis title
+        legend.text = element_text(size = 10),
+        legend.title = element_blank(),
+        panel.grid = element_blank()) # Removes gridlines
+Profile7_Graph + guides(alpha = guide_none())
+```
+
+#CONTROL CLUSTER 2 (PROFILE 2) STEM GRAPH
+```{r}
+
+# STEM Data was imported
+
+# Reformatted data into long format
+Profile2 <- melt(DQO_STEM_Results_Control_Trial_Profile_2, id.vars = "Protein Names", variable.name = "Stage", value.name = "n")
+
+# Convert the x-axis variable to a factor with the order as in the data file (Makes A 1st)
+Profile2$Stage <- factor(Profile2$Stage, levels = unique(Profile2$Stage))
+### Basic Plot for Profile 7 (Shows the dip at Pre-Met)
+ggplot(Profile2, aes(x= Stage, y=n, group=`Protein Names`, color=`Protein Names`)) + ylim(-7000,100) + #should be min and max of data
+  geom_line() +
+  labs(title = "Profile 2",
+       x = "Time Point",
+       y = "Fold Change",
+       color = "Gene") +
+  theme_minimal()
+View(Profile2)
+
+# Highlight AVERAGE in Profile7
+highlight_gene <- c("AVERAGE")
+
+#Vector for Group
+group_vector_Profile2 <- ifelse(Profile2$`Protein Names` %in% highlight_gene, "Average", "Other")
+View(group_vector_Profile2)
+df_Profile2 <- as.data.frame(Profile2)
+df_Profile2$Color <- c(group_vector_Profile2)
+colnames(df_Profile2) <- c("Protein Names", "Stage", "FC", "Group")
+View(df_Profile2)
+# Ensure that the group levels are factors for colors and opacity
+#Vector for Opacity
+opacity_values <- c("Average" = 1.0, "Other" = 0.5)
+df_Profile2$Group <- factor(df_Profile2$Group, levels = names(opacity_values))
+#Vector for Colors
+color_values <- c("Average" = "red", "Other" = "grey")
+df_Profile2$Group <- factor(df_Profile2$Group, levels = names(color_values))
+# Make x-axis values numeric to change spacing
+df_Profile2$Stage_num <- recode(df_Profile2$Stage, "A" = 0, "C" = 14, "D" = 19)
+# Plot the data with the correct mapping
+Profile2_Graph <- ggplot(df_Profile2, aes(x= Stage_num, y= FC, group = `Protein Names`, alpha = Group, color = Group)) + ylim(-7000,10000) +
+  geom_line(size = 0.25) +
+  geom_line(data = subset(df_Profile2, df_Profile2$Group == "Average"), aes(color = Group), 
+            size = 0.75) +
+  geom_hline(yintercept = 0, linetype = 5, color = "black", size = .5) +
+  geom_vline(xintercept = 0, linetype = 5, color = "black", size = .5) +
+  scale_color_manual(values = c("Others" = "grey", "Average" = "red")) +
+  scale_alpha_manual(values = opacity_values) +
+  scale_x_continuous(breaks = c(0, 14, 19), labels = c("A", "C", "D")) +  # Uneven spacing
+  labs(title = "Profile 2",
+       x = "Time Point",
+       y = "Fold Change",
+       color = "Protein Names") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, hjust = 0.5),  # Center title
+        axis.text.x = element_text(size = 14),  # Adjusts the text size of the x-axis tick labels
+        axis.text.y = element_text(size = 14),  # Adjusts the text size of the y-axis tick labels
+        axis.title.x = element_text(size = 14), # Adjusts the text size of the x-axis title
+        axis.title.y = element_text(size = 14), # Adjusts the text size of the y-axis title
+        legend.text = element_text(size = 10),
+        legend.title = element_blank(),
+        panel.grid = element_blank()) # Removes gridlines
+Profile2_Graph + guides(alpha = guide_none())
+```
+
+#CONTROL CLUSTER 3 (PROFILE 3) STEM GRAPH
+```{r}
+
+# STEM Data was imported
+
+# Reformatted data into long format
+Profile3 <- melt(DQO_STEM_Results_Control_Trial_Profile_3, id.vars = "Protein Names", variable.name = "Stage", value.name = "n")
+
+# Convert the x-axis variable to a factor with the order as in the data file (Makes A 1st)
+Profile3$Stage <- factor(Profile3$Stage, levels = unique(Profile3$Stage))
+### Basic Plot for Profile 7 (Shows the dip at Pre-Met)
+ggplot(Profile3, aes(x= Stage, y=n, group=`Protein Names`, color=`Protein Names`)) + ylim(-3000,100) + #should be min and max of data
+  geom_line() +
+  labs(title = "Profile 3",
+       x = "Time Point",
+       y = "Fold Change",
+       color = "Gene") +
+  theme_minimal()
+View(Profile3)
+
+# Highlight AVERAGE in Profile7
+highlight_gene <- c("AVERAGE")
+
+#Vector for Group
+group_vector_Profile3 <- ifelse(Profile3$`Protein Names` %in% highlight_gene, "Average", "Other")
+View(group_vector_Profile3)
+df_Profile3 <- as.data.frame(Profile3)
+df_Profile3$Color <- c(group_vector_Profile3)
+colnames(df_Profile3) <- c("Protein Names", "Stage", "FC", "Group")
+View(df_Profile3)
+# Ensure that the group levels are factors for colors and opacity
+#Vector for Opacity
+opacity_values <- c("Average" = 1.0, "Other" = 0.5)
+df_Profile3$Group <- factor(df_Profile3$Group, levels = names(opacity_values))
+#Vector for Colors
+color_values <- c("Average" = "red", "Other" = "grey")
+df_Profile3$Group <- factor(df_Profile3$Group, levels = names(color_values))
+# Make x-axis values numeric to change spacing
+df_Profile3$Stage_num <- recode(df_Profile3$Stage, "A" = 0, "C" = 14, "D" = 19)
+# Plot the data with the correct mapping
+Profile3_Graph <- ggplot(df_Profile3, aes(x= Stage_num, y= FC, group = `Protein Names`, alpha = Group, color = Group)) + ylim(-7000,10000) +
+  geom_line(size = 0.25) +
+  geom_line(data = subset(df_Profile3, df_Profile3$Group == "Average"), aes(color = Group), 
+            size = 0.75) +
+  geom_hline(yintercept = 0, linetype = 5, color = "black", size = .5) +
+  geom_vline(xintercept = 0, linetype = 5, color = "black", size = .5) +
+  scale_color_manual(values = c("Others" = "grey", "Average" = "red")) +
+  scale_alpha_manual(values = opacity_values) +
+  scale_x_continuous(breaks = c(0, 14, 19), labels = c("A", "C", "D")) +  # Uneven spacing
+  labs(title = "Profile 3",
+       x = "Time Point",
+       y = "Fold Change",
+       color = "Protein Names") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, hjust = 0.5),  # Center title
+        axis.text.x = element_text(size = 14),  # Adjusts the text size of the x-axis tick labels
+        axis.text.y = element_text(size = 14),  # Adjusts the text size of the y-axis tick labels
+        axis.title.x = element_text(size = 14), # Adjusts the text size of the x-axis title
+        axis.title.y = element_text(size = 14), # Adjusts the text size of the y-axis title
+        legend.text = element_text(size = 10),
+        legend.title = element_blank(),
+        panel.grid = element_blank()) # Removes gridlines
+Profile3_Graph + guides(alpha = guide_none())
+```
+
+#CONTROL CLUSTER 4 (PROFILE 8) STEM GRAPH
+```{r}
+
+# STEM Data was imported
+
+# Reformatted data into long format
+Profile8 <- melt(DQO_STEM_Results_Control_Trial_Profile_8, id.vars = "Protein Names", variable.name = "Stage", value.name = "n")
+
+# Convert the x-axis variable to a factor with the order as in the data file (Makes A 1st)
+Profile8$Stage <- factor(Profile8$Stage, levels = unique(Profile8$Stage))
+### Basic Plot for Profile 7 (Shows the dip at Pre-Met)
+ggplot(Profile8, aes(x= Stage, y=n, group=`Protein Names`, color=`Protein Names`)) + ylim(-1000,7000) + #should be min and max of data
+  geom_line() +
+  labs(title = "Profile 8",
+       x = "Time Point",
+       y = "Fold Change",
+       color = "Gene") +
+  theme_minimal()
+View(Profile8)
+
+# Highlight AVERAGE in Profile7
+highlight_gene <- c("AVERAGE")
+
+#Vector for Group
+group_vector_Profile8 <- ifelse(Profile8$`Protein Names` %in% highlight_gene, "Average", "Other")
+View(group_vector_Profile8)
+df_Profile8 <- as.data.frame(Profile8)
+df_Profile8$Color <- c(group_vector_Profile8)
+colnames(df_Profile8) <- c("Protein Names", "Stage", "FC", "Group")
+View(df_Profile8)
+# Ensure that the group levels are factors for colors and opacity
+#Vector for Opacity
+opacity_values <- c("Average" = 1.0, "Other" = 0.5)
+df_Profile8$Group <- factor(df_Profile8$Group, levels = names(opacity_values))
+#Vector for Colors
+color_values <- c("Average" = "red", "Other" = "grey")
+df_Profile8$Group <- factor(df_Profile8$Group, levels = names(color_values))
+# Make x-axis values numeric to change spacing
+df_Profile8$Stage_num <- recode(df_Profile8$Stage, "A" = 0, "C" = 14, "D" = 19)
+# Plot the data with the correct mapping
+Profile8_Graph <- ggplot(df_Profile8, aes(x= Stage_num, y= FC, group = `Protein Names`, alpha = Group, color = Group)) + ylim(-7000,10000) +
+  geom_line(size = 0.25) +
+  geom_line(data = subset(df_Profile8, df_Profile8$Group == "Average"), aes(color = Group), 
+            size = 0.75) +
+  geom_hline(yintercept = 0, linetype = 5, color = "black", size = .5) +
+  geom_vline(xintercept = 0, linetype = 5, color = "black", size = .5) +
+  scale_color_manual(values = c("Others" = "grey", "Average" = "red")) +
+  scale_alpha_manual(values = opacity_values) +
+  scale_x_continuous(breaks = c(0, 14, 19), labels = c("A", "C", "D")) +  # Uneven spacing
+  labs(title = "Profile 8",
+       x = "Time Point",
+       y = "Fold Change",
+       color = "Protein Names") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, hjust = 0.5),  # Center title
+        axis.text.x = element_text(size = 14),  # Adjusts the text size of the x-axis tick labels
+        axis.text.y = element_text(size = 14),  # Adjusts the text size of the y-axis tick labels
+        axis.title.x = element_text(size = 14), # Adjusts the text size of the x-axis title
+        axis.title.y = element_text(size = 14), # Adjusts the text size of the y-axis title
+        legend.text = element_text(size = 10),
+        legend.title = element_blank(),
+        panel.grid = element_blank()) # Removes gridlines
+Profile8_Graph + guides(alpha = guide_none())
+```
+
+#CONTROL CLUSTER 5 (PROFILE 13) STEM GRAPH
+```{r}
+
+# STEM Data was imported
+
+# Reformatted data into long format
+Profile13 <- melt(DQO_STEM_Results_Control_Trial_Profile_13, id.vars = "Protein Names", variable.name = "Stage", value.name = "n")
+
+# Convert the x-axis variable to a factor with the order as in the data file (Makes A 1st)
+Profile13$Stage <- factor(Profile13$Stage, levels = unique(Profile13$Stage))
+### Basic Plot for Profile 7 (Shows the dip at Pre-Met)
+ggplot(Profile13, aes(x= Stage, y=n, group=`Protein Names`, color=`Protein Names`)) + ylim(-100,8000) + #should be min and max of data
+  geom_line() +
+  labs(title = "Profile 13",
+       x = "Time Point",
+       y = "Fold Change",
+       color = "Gene") +
+  theme_minimal()
+View(Profile13)
+
+# Highlight AVERAGE in Profile7
+highlight_gene <- c("AVERAGE")
+
+#Vector for Group
+group_vector_Profile13 <- ifelse(Profile13$`Protein Names` %in% highlight_gene, "Average", "Other")
+View(group_vector_Profile13)
+df_Profile13 <- as.data.frame(Profile13)
+df_Profile13$Color <- c(group_vector_Profile13)
+colnames(df_Profile13) <- c("Protein Names", "Stage", "FC", "Group")
+View(df_Profile13)
+# Ensure that the group levels are factors for colors and opacity
+#Vector for Opacity
+opacity_values <- c("Average" = 1.0, "Other" = 0.5)
+df_Profile13$Group <- factor(df_Profile13$Group, levels = names(opacity_values))
+#Vector for Colors
+color_values <- c("Average" = "red", "Other" = "grey")
+df_Profile13$Group <- factor(df_Profile13$Group, levels = names(color_values))
+# Make x-axis values numeric to change spacing
+df_Profile13$Stage_num <- recode(df_Profile13$Stage, "A" = 0, "C" = 14, "D" = 19)
+# Plot the data with the correct mapping
+Profile13_Graph <- ggplot(df_Profile13, aes(x= Stage_num, y= FC, group = `Protein Names`, alpha = Group, color = Group)) + ylim(-7000,10000) +
+  geom_line(size = 0.25) +
+  geom_line(data = subset(df_Profile13, df_Profile13$Group == "Average"), aes(color = Group), 
+            size = 0.5) +
+  geom_hline(yintercept = 0, linetype = 5, color = "black", size = .75) +
+  geom_vline(xintercept = 0, linetype = 5, color = "black", size = .5) +
+  scale_color_manual(values = c("Others" = "grey", "Average" = "red")) +
+  scale_alpha_manual(values = opacity_values) +
+  scale_x_continuous(breaks = c(0, 14, 19), labels = c("A", "C", "D")) +  # Uneven spacing
+  labs(title = "Profile 13",
+       x = "Time Point",
+       y = "Fold Change",
+       color = "Protein Names") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, hjust = 0.5),  # Center title
+        axis.text.x = element_text(size = 14),  # Adjusts the text size of the x-axis tick labels
+        axis.text.y = element_text(size = 14),  # Adjusts the text size of the y-axis tick labels
+        axis.title.x = element_text(size = 14), # Adjusts the text size of the x-axis title
+        axis.title.y = element_text(size = 14), # Adjusts the text size of the y-axis title
+        legend.text = element_text(size = 10),
+        legend.title = element_blank(),
+        panel.grid = element_blank()) # Removes gridlines
+Profile13_Graph + guides(alpha = guide_none())
+```
+
+#PRECONDITIONING PROFILE 14 STEM GRAPH
+```{r}
+library(reshape2)
+
+# STEM Data was imported
+
+# Reformatted data into long format
+Profile14 <- melt(DQO_STEM_Results_PC6_Trial_Profile_14, id.vars = "Protein Names", variable.name = "Stage", value.name = "n")
+
+# Convert the x-axis variable to a factor with the order as in the data file (Makes A 1st)
+Profile14$Stage <- factor(Profile14$Stage, levels = unique(Profile14$Stage))
+### Basic Plot for Profile 7 (Shows the dip at Pre-Met)
+ggplot(Profile14, aes(x= Stage, y=n, group=`Protein Names`, color=`Protein Names`)) + ylim(-100,10000) + #should be min and max of data
+  geom_line() +
+  labs(title = "Profile 14",
+       x = "Time Point",
+       y = "Fold Change",
+       color = "Gene") +
+  theme_minimal()
+View(Profile14)
+
+# Highlight AVERAGE in Profile7
+highlight_gene <- c("AVERAGE")
+
+#Vector for Group
+group_vector_Profile14 <- ifelse(Profile14$`Protein Names` %in% highlight_gene, "Average", "Other")
+View(group_vector_Profile14)
+df_Profile14 <- as.data.frame(Profile14)
+df_Profile14$Color <- c(group_vector_Profile14)
+colnames(df_Profile14) <- c("Protein Names", "Stage", "FC", "Group")
+View(df_Profile14)
+# Ensure that the group levels are factors for colors and opacity
+#Vector for Opacity
+opacity_values <- c("Average" = 1.0, "Other" = 0.5)
+df_Profile14$Group <- factor(df_Profile14$Group, levels = names(opacity_values))
+#Vector for Colors
+color_values <- c("Average" = "blue", "Other" = "grey")
+df_Profile14$Group <- factor(df_Profile14$Group, levels = names(color_values))
+# Make x-axis values numeric to change spacing
+df_Profile14$Stage_num <- recode(df_Profile14$Stage, "A" = 0, "C" = 14, "D" = 19)
+# Plot the data with the correct mapping
+Profile14_Graph <- ggplot(df_Profile14, aes(x= Stage_num, y= FC, group = `Protein Names`, alpha = Group, color = Group)) + ylim(-7000,10000) +
+  geom_line(size = 0.25) +
+  geom_line(data = subset(df_Profile14, df_Profile14$Group == "Average"), aes(color = Group), 
+            size = 0.75) +
+  geom_hline(yintercept = 0, linetype = 5, color = "black", size = .5) +
+  geom_vline(xintercept = 0, linetype = 5, color = "black", size = .5) +
+  scale_color_manual(values = c("Others" = "grey", "Average" = "blue")) +
+  scale_alpha_manual(values = opacity_values) +
+  scale_x_continuous(breaks = c(0, 14, 19), labels = c("A", "C", "D")) +  # Uneven spacing
+  labs(title = "Profile 14",
+       x = "Time Point",
+       y = "Fold Change",
+       color = "Gene Symbol") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, hjust = 0.5),  # Center title
+        axis.text.x = element_text(size = 14),  # Adjusts the text size of the x-axis tick labels
+        axis.text.y = element_text(size = 14),  # Adjusts the text size of the y-axis tick labels
+        axis.title.x = element_text(size = 14), # Adjusts the text size of the x-axis title
+        axis.title.y = element_text(size = 14), # Adjusts the text size of the y-axis title
+        legend.text = element_text(size = 10),
+        legend.title = element_blank(),
+        panel.grid = element_blank()) # Removes gridlines
+Profile14_Graph + guides(alpha = guide_none())
+```
+
+#PRECONDITIONING PROFILE 10 STEM GRAPH
+```{r}
+library(reshape2)
+
+# STEM Data was imported
+
+# Reformatted data into long format
+Profile10 <- melt(DQO_STEM_Results_PC6_Trial_Profile_10, id.vars = "Protein Names", variable.name = "Stage", value.name = "n")
+
+# Convert the x-axis variable to a factor with the order as in the data file (Makes A 1st)
+Profile10$Stage <- factor(Profile10$Stage, levels = unique(Profile10$Stage))
+### Basic Plot for Profile 7 (Shows the dip at Pre-Met)
+ggplot(Profile10, aes(x= Stage, y=n, group=`Protein Names`, color=`Protein Names`)) + ylim(-2000,6000) + #should be min and max of data
+  geom_line() +
+  labs(title = "Profile 10",
+       x = "Time Point",
+       y = "Fold Change",
+       color = "Gene") +
+  theme_minimal()
+View(Profile10)
+
+# Highlight AVERAGE in Profile10
+highlight_gene <- c("AVERAGE")
+
+#Vector for Group
+group_vector_Profile10 <- ifelse(Profile10$`Protein Names` %in% highlight_gene, "Average", "Other")
+View(group_vector_Profile10)
+df_Profile10 <- as.data.frame(Profile10)
+df_Profile10$Color <- c(group_vector_Profile10)
+colnames(df_Profile10) <- c("Protein Names", "Stage", "FC", "Group")
+View(df_Profile10)
+# Ensure that the group levels are factors for colors and opacity
+#Vector for Opacity
+opacity_values <- c("Average" = 1.0, "Other" = 0.5)
+df_Profile10$Group <- factor(df_Profile10$Group, levels = names(opacity_values))
+#Vector for Colors
+color_values <- c("Average" = "blue", "Other" = "grey")
+df_Profile10$Group <- factor(df_Profile10$Group, levels = names(color_values))
+# Make x-axis values numeric to change spacing
+df_Profile10$Stage_num <- recode(df_Profile10$Stage, "A" = 0, "C" = 14, "D" = 19)
+# Plot the data with the correct mapping
+Profile10_Graph <- ggplot(df_Profile10, aes(x= Stage_num, y= FC, group = `Protein Names`, alpha = Group, color = Group)) + ylim(-7000,10000) +
+  geom_line(size = 0.25) +
+  geom_line(data = subset(df_Profile10, df_Profile10$Group == "Average"), aes(color = Group), 
+            size = 0.75) +
+  geom_hline(yintercept = 0, linetype = 5, color = "black", size = .5) +
+  geom_vline(xintercept = 0, linetype = 5, color = "black", size = .5) +
+  scale_color_manual(values = c("Others" = "grey", "Average" = "blue")) +
+  scale_alpha_manual(values = opacity_values) +
+  scale_x_continuous(breaks = c(0, 14, 19), labels = c("A", "C", "D")) +  # Uneven spacing
+  labs(title = "Profile 10",
+       x = "Time Point",
+       y = "Fold Change",
+       color = "Gene Symbol") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, hjust = 0.5),  # Center title
+        axis.text.x = element_text(size = 14),  # Adjusts the text size of the x-axis tick labels
+        axis.text.y = element_text(size = 14),  # Adjusts the text size of the y-axis tick labels
+        axis.title.x = element_text(size = 14), # Adjusts the text size of the x-axis title
+        axis.title.y = element_text(size = 14), # Adjusts the text size of the y-axis title
+        legend.text = element_text(size = 10),
+        legend.title = element_blank(),
+        panel.grid = element_blank()) # Removes gridlines
+Profile10_Graph + guides(alpha = guide_none())
+```
+
+#PRECONDITIONING CLUSTER 1 (PROFILE 14 + 10) STEM GRAPH
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(reshape2)
+
+# STEM Data was imported
+
+# Reformatted data into long format
+Cluster1PC6 <- melt(DQO_STEM_Results_PC6_Trial_Cluster_1_Profile_14_10_, id.vars = "Protein Names", variable.name = "Stage", value.name = "n")
+
+# Convert the x-axis variable to a factor with the order as in the data file (Makes A 1st)
+Cluster1PC6$Stage <- factor(Cluster1PC6$Stage, levels = unique(Cluster1PC6$Stage))
+### Basic Plot for Profile 7 (Shows the dip at Pre-Met)
+#ggplot(Cluster1PC6, aes(x= Stage, y=n, group=`Protein Names`, color=`Protein Names`)) + ylim(-7000,10000) + #should be min and max of data
+#  geom_line() +
+#  labs(x = "Time Point",
+#       y = "Fold Change",
+#       color = "Gene") +
+#  theme_minimal()
+#View(Cluster1PC6)
+
+# Highlight AVERAGE in Cluster1PC6
+highlight_gene <- c("AVERAGE")
+
+#Vector for Group
+group_vector_Cluster1PC6 <- ifelse(Cluster1PC6$`Protein Names` %in% highlight_gene, "Average", "Other")
+View(group_vector_Cluster1PC6)
+df_Cluster1PC6 <- as.data.frame(Cluster1PC6)
+df_Cluster1PC6$Color <- c(group_vector_Cluster1PC6)
+colnames(df_Cluster1PC6) <- c("Protein Names", "Stage", "FC", "Group")
+View(df_Cluster1PC6)
+# Ensure that the group levels are factors for colors and opacity
+#Vector for Opacity
+#opacity_values <- c("Average" = 1.0, "Other" = 0.5)
+#df_Cluster1PC6$Group <- factor(df_Cluster1PC6$Group, levels = names(opacity_values))
+#Vector for Colors
+#color_values <- c("Average" = "blue", "Other" = "grey")
+#df_Cluster1PC6$Group <- factor(df_Cluster1PC6$Group, levels = names(color_values))
+# Make x-axis values numeric to change spacing
+df_Cluster1PC6$Stage_num <- recode(df_Cluster1PC6$Stage, "A" = 0, "C" = 14, "D" = 19)
+# Create ranges for 95% ribbon
+#df_Cluster1PC6$ymin_Cluster1PC6 <- #ifelse(df_Cluster1PC6$Stage == "A", 0, 
+#                  ifelse(df_Cluster1PC6$Stage == "C", #89.41, 
+#                         ifelse(df_Cluster1PC6$Stage == #"D", -127.93, NA)))
+#
+#df_Cluster1PC6$ymax_Cluster1PC6 <- #ifelse(df_Cluster1PC6$Stage == "A", 0, 
+#                  ifelse(df_Cluster1PC6$Stage == "C", #2977.67, 
+#                         ifelse(df_Cluster1PC6$Stage == #"D", 694.04, NA)))
+# Create ranges for 25% ribbon
+df_Cluster1PC6$ymin_25_Cluster1PC6 <- ifelse(df_Cluster1PC6$Stage == "A", 0, 
+                  ifelse(df_Cluster1PC6$Stage == "C", 441.79, 
+                         ifelse(df_Cluster1PC6$Stage == "D", 115.39, NA)))
+
+df_Cluster1PC6$ymax_25_Cluster1PC6 <- ifelse(df_Cluster1PC6$Stage == "A", 0, 
+                  ifelse(df_Cluster1PC6$Stage == "C", 736.85, 
+                         ifelse(df_Cluster1PC6$Stage == "D", 287.245, NA)))
+# Create ranges for 50% ribbon
+df_Cluster1PC6$ymin_50_Cluster1PC6 <- ifelse(df_Cluster1PC6$Stage == "A", 0, 
+                  ifelse(df_Cluster1PC6$Stage == "C", 310.8, 
+                         ifelse(df_Cluster1PC6$Stage == "D", 54.7125, NA)))
+
+df_Cluster1PC6$ymax_50_Cluster1PC6 <- ifelse(df_Cluster1PC6$Stage == "A", 0, 
+                  ifelse(df_Cluster1PC6$Stage == "C", 981.29, 
+                         ifelse(df_Cluster1PC6$Stage == "D", 440.8975, NA)))
+# Create ranges for 75% ribbon
+df_Cluster1PC6$ymin_75_Cluster1PC6 <- ifelse(df_Cluster1PC6$Stage == "A", 0, 
+                  ifelse(df_Cluster1PC6$Stage == "C", 193.57, 
+                         ifelse(df_Cluster1PC6$Stage == "D", 0.6, NA)))
+
+df_Cluster1PC6$ymax_75_Cluster1PC6 <- ifelse(df_Cluster1PC6$Stage == "A", 0, 
+                  ifelse(df_Cluster1PC6$Stage == "C", 1504.43, 
+                         ifelse(df_Cluster1PC6$Stage == "D", 699.36125, NA)))
+# Create ranges for 100% ribbon
+df_Cluster1PC6$ymin_100_Cluster1PC6 <- ifelse(df_Cluster1PC6$Stage == "A", 0, 
+                  ifelse(df_Cluster1PC6$Stage == "C", 11.18, 
+                         ifelse(df_Cluster1PC6$Stage == "D", -1050.14, NA)))
+
+df_Cluster1PC6$ymax_100_Cluster1PC6 <- ifelse(df_Cluster1PC6$Stage == "A", 0, 
+                  ifelse(df_Cluster1PC6$Stage == "C", 9770.15, 
+                         ifelse(df_Cluster1PC6$Stage == "D", 4952.07, NA)))
+# Log transform data
+df_Cluster1PC6_log <- df_Cluster1PC6 %>%
+  mutate(FC_log = sign(FC) * log(abs(FC) + 1))
+# Plot the data with the correct mapping
+Cluster1PC6_Graph <- ggplot(df_Cluster1PC6_log, aes(x= Stage_num, y= FC_log, group = `Protein Names`, alpha = Group, color = Group)) + ylim(-10,10) +
+  geom_ribbon(aes(ymin = (sign(ymin_100_Cluster1PC6) * log(abs(ymin_100_Cluster1PC6) + 1)), ymax = (sign(ymax_100_Cluster1PC6) * log(abs(ymax_100_Cluster1PC6) + 1))), fill = "#E5E5E5", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_75_Cluster1PC6) * log(abs(ymin_75_Cluster1PC6) + 1)), ymax = (sign(ymax_75_Cluster1PC6) * log(abs(ymax_75_Cluster1PC6) + 1))), fill = "#D3D3D3", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_50_Cluster1PC6) * log(abs(ymin_50_Cluster1PC6) + 1)), ymax = (sign(ymax_50_Cluster1PC6) * log(abs(ymax_50_Cluster1PC6) + 1))), fill = "#A0A0A0", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_25_Cluster1PC6) * log(abs(ymin_25_Cluster1PC6) + 1)), ymax = (sign(ymax_25_Cluster1PC6) * log(abs(ymax_25_Cluster1PC6) + 1))), fill = "#808080", size = 0) + # Shaded region
+  geom_line(size = 0.05, color = "black") +
+  geom_line(data = subset(df_Cluster1PC6_log, df_Cluster1PC6_log$Group == "Average"), 
+            size = 3, alpha = 1) +
+  geom_hline(yintercept = 0, linetype = 5, color = "black", size = .5) +
+  geom_vline(xintercept = 0, linetype = 1, color = "black", size = .5) +
+  geom_hline(yintercept = -10, linetype = 1, color = "black", size = .5) +
+  scale_color_manual(values = c("Average" = "blue")) +
+  #scale_alpha_manual(values = opacity_values) +
+  scale_x_continuous(breaks = c(0, 14, 19), labels = c("A", "C", "D")) +  # Uneven spacing
+  labs(x = "Time Point",
+       y = "Log(Fold Change)",
+       color = "Gene Symbol") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, hjust = 0.5),  # Center title
+        axis.text.x = element_text(size = 14),  # Adjusts the text size of the x-axis tick labels
+        axis.text.y = element_text(size = 14),  # Adjusts the text size of the y-axis tick labels
+        axis.title.x = element_text(size = 14), # Adjusts the text size of the x-axis title
+        axis.title.y = element_text(size = 14), # Adjusts the text size of the y-axis title
+        legend.text = element_text(size = 10),
+        legend.title = element_blank(),
+        panel.grid = element_blank()) # Removes gridlines
+Cluster1PC6_Graph + guides(alpha = guide_none())
+```
+
+```{r}
+#https://www.programiz.com/python-programming/online-compiler/
+
+# Your dataset
+data <- c(421.26, 237.59, 179.71, 679.75, 466.11, 433.85, 65.05, 178.22, 384.81, 854.28, 245.78, 601.73, 214.58, 620.41, 452.81, 1657.11, 478.3, 540.85, 727.48, 482.72, 11.18, 97.46, 229.25, 1005.80, 275.69, 192.06, 107.99, 301.55, 348.66, 332.81, 163.22, 101.34, 269.01, 376.76, 149.84, 352.06, 247.74, 189.47, 606.07, 85.37, 162.43, 439.52, 114.74, 1138.96, 761.03, 1701.57, 410.97, 179.57, 151.01, 852.13, 161.97, 514.31, 529.28, 1209.78, 2993.74, 417.32, 224.34, 496.69, 163.54, 2037.34, 604.9, 171.02, 805.21, 871.19, 76.02, 477.2, 789.45, 586.83, 806.04, 623.86, 553.81, 418.23, 242.12, 177.34, 451.39, 327.38, 1107.69, 646.26, 205.75, 269.25, 243.87, 198.42, 938.19, 1017.69, 388.61, 356.39, 480.02, 173.1, 76.71, 145.03, 1164.04, 150.36, 267.31, 106.58, 580.58, 759.35, 147.18, 809.06, 812.37, 260.06, 217.12, 427.11, 800.73, 339.6, 350.79, 526.86, 266.17, 485.21, 245, 477.87, 368.65, 88.9, 283.52, 416.53, 205.67, 621.19, 532.32, 329.04, 223.02, 93.02, 412.86, 413.71, 246.1, 279.22, 404.44, 5501.91, 1168.85, 1304.04, 279.36, 366.56, 404.99, 339.02, 1023.73, 316.31, 778.14, 338.29, 710.19, 2922.32, 3073.64, 629.83, 318.94, 549.54, 108.51, 613.7, 198.91, 193.57, 155.84, 315.47, 100.47, 229.52, 91.15, 284.75, 391.48, 526.01, 760.65, 523.59, 451.04, 626.46, 145.9, 972.08, 2258.59, 254.28, 1561.06, 581.72, 844.04, 152.13, 142.73, 979.25, 1283.42, 731.87, 514.5, 305.32, 2915.09, 741.49, 277.67, 458.06, 171.95, 211.93, 105.24, 279.67, 630.01, 292.22, 687.67, 120.09, 484.37, 952.28, 1778.48, 509.6, 441.87, 183.99, 896.55, 379.49, 1045.39, 305.29, 225.52, 296.03, 1739.79, 866.75, 337.05, 444.36, 521.3, 1602.20, 1325.42, 8656.21, 1222.26, 156.8, 6150.52, 529.15, 1609.76, 402.09, 803.52, 990.81, 1889.69, 1564.52, 3065.03, 263.7, 539.25, 1895.52, 1783.07, 279.27, 1172.95, 183.1, 510.79, 4518.95, 247.27, 215.21, 745.4, 372.17, 453.58, 535.04, 1391.12, 476.48, 174.9, 675.54, 2354.71, 556.71, 1082.22, 837.91, 1465.72, 84.75, 1123.17, 712.7, 1401.77, 1057.32, 511.01, 1151.99, 403.76, 268.32, 1177.79, 725.88, 876.46, 874.76, 201.54, 198.15, 944.25, 1189.49, 352.74, 311.66, 310.8, 220.12, 2269.04, 632.47, 397.01, 472.85, 581.48, 1154.40, 504.6, 134.09, 695, 3532.57, 653.92, 1414.49, 1275.25, 349.92, 436.97, 1759.54, 1432.09, 705.48, 665.18, 497.59, 194.55, 177.57, 350.12, 1559.64, 269.46, 1072.28, 430.58, 238.36, 529.53, 1116.82, 592.77, 753.33, 756.51, 329.32, 878.26, 577.91, 883.48, 323.34, 659.77, 1071.24, 602.75, 836.51, 668.11, 707.46, 4048.87, 7518.83, 3042.31, 413.92, 2386.21, 1003.57, 8236.35, 6486.76, 1695.59, 931.84, 1527.60, 897.38, 416.48, 657.82, 1053.15, 1268.89, 151.97, 164.24, 2801.24, 600.02, 727.54, 2454.98, 966.32, 531.04, 1796.73, 450.88, 231.77, 4019.03, 186.29, 1222.22, 634.13, 1313.66, 569.82, 404.06, 664.12, 958.3, 533.4, 352.94, 476.63, 2177.00, 1548.27, 4148.04, 1110.02, 1894.17, 471.38, 1025.79, 9770.15, 2394.82, 1278.38, 4221.70, 1924.14, 806.92, 572.38, 3633.06, 327.72, 305.67, 743.6, 737.42, 2582.58, 289.96, 331.97, 495.14, 505.77, 728.67, 867.8, 289.81, 420.98, 599.62, 1036.40, 410.11, 406.86, 996.21, 2451.25, 102.3, 546.59, 1628.23, 284.86, 2538.34, 1548.80, 213.53, 289.23, 876.92, 564.91, 342.74, 1200.72, 494.69, 648.32, 451.21, 859.83, 147.34, 811.5, 825.91, 728.94, 169.83, 3169.59, 186.17, 65.47, 773.65, 1350.25, 1327.56, 677.09, 699.25, 4514.35, 443.29, 191.45, 426.63, 1504.43, 1128.74, 420.97, 126.12, 1795.43, 2435.47, 290.22, 465.48, 487.91, 612.47, 441.79, 565.28, 732.27, 616.59, 560.7, 433.5, 46.04, 509.7, 312.04, 981.29, 1136.68, 429.62, 106.97, 26.08, 258.01, 274.52, 1079.01, 287.68, 670.78, 543.44, 709.77, 1377.01, 1968.24, 837.81, 661.8, 2483.07, 2610.86, 986.64, 487.29, 788.62, 732.38, 987.18, 209.19, 157.73, 557.24, 505.73, 751.5, 752.95, 929.26, 1091.89, 513.5, 2066.67, 152.45, 930.57, 952.41, 1227.32, 568.43, 674.01, 1261.83, 455.75, 616.24, 736.85, 701.65, 576.1, 1045.34, 816.47, 567.95, 2888.78, 71.1, 202.82, 360.04, 718.65, 2553.20, 237.45, 816.19, 1055.94, 883.52, 646.24, 552.93, 408.13, 648.81, 715.71, 173.67, 747.12, 936.08, 1219.67, 1090.28, 530.11, 1031.24, 1112.69, 492.59, 291.04, 608.88, 380.09, 1317.77, 830.69, 303.48, 261.68, 423.5, 290.15, 991.47, 362.78, 567.87, 319.27, 945.22, 861.41, 1867.03, 925.1, 623.19, 3022.17, 534.11, 812.58, 822.02, 3386.63, 2983.37, 1203.07, 1152.84, 592.53, 1122.60, 808.16, 123.88, 1502.93, 185.81, 187.51, 912.41, 391.18, 1395.19, 259.05, 6034.12, 537.75, 877.85, 124.87, 820.3, 140.54, 1081.39)
+
+# Calculate Q1 and Q3
+q1_25 <- quantile(data, 0.125)
+q3_75 <- quantile(data, 0.875)
+
+# Output results
+q1_25
+q3_75
+
+data_1 <- c(87.96, 22.59, 42.6, 45.98, -20.09, -39.45, 1.44, -8.38, 28.44, 141.08, -87.37, 25.71, 31.41, 35.25, 117.14, 161.17, 40.21, 48.54, 72.65, 123.42, -0.95, -17.21, -80.68, 242.57, -93.52, -14.99, -33.29, -53.13, 91.99, 14.49, 32.99, 10.02, 29.21, -47.96, 14.03, -20.47, 33.86, 16.85, -36.72, 17.22, -54.42, 90.32, -28.45, 280.46, 65.33, 440.96, -148.22, -46.58, 11.03, -91.72, 38.88, 117.33, 32.69, 200.42, 719.01, -136.59, -54.82, -1.07, -5.53, 504.87, -22.27, 1.67, 157.6, -73.06, 11.62, 94.88, 178.08, -10.81, 213.01, 118.37, 19.06, 19.47, 16.98, 11.13, 13.17, -85.41, 65.47, 146.68, -54.95, -83.67, 28.36, -24.39, 187.68, 135.74, -25.44, -80.71, 39.43, -4.17, 16.55, -42.15, 119.38, -1.16, -61.71, 12.54, 21.75, 93.49, 35.35, 24.67, 180.78, 29.67, -1.58, -40.46, 159.64, 33.34, 40.63, 37.72, -16.66, 101.91, 47.81, -48.81, 69.08, 0.48, 23.05, 100.99, -24.53, 96.57, 37.79, 72.25, -7.12, -22.96, 98.01, -13.49, -63.15, -20.61, 103.97, -1050.14, -94.03, 334.38, 19.05, 53.52, 41.63, -29.36, 231.9, 83.24, -32.39, 59.46, 66.13, 770.42, -76.58, 100.71, 73.91, -37.56, 13.39, -21.22, 12.49, 38.8, 15.54, -8.03, -7.97, -4.44, -11.64, -47.46, -132.59, 105.87, 1.5, -4.9, 40.73, -105.95, -6.36, 180.1, 480.95, -24.28, 296.84, 134.6, 125.21, 25.17, 18.88, 144.67, 231.9, -1.64, -166.85, 32.1, 692.59, 89.61, -51.84, 51.84, 34.3, 9.43, 25.09, 29.83, -14.23, 15.39, 155.27, 26.24, -145.51, 249.17, 409.13, 13.27, 88.44, 87.9, 529.93, 235.42, 545.18, 131.28, 80.19, 155.57, 694.35, 260.18, 118.13, 283.91, 231.3, 440.71, 727.68, 2875.88, 614.01, 107.46, 2599.76, 229.98, 1102.74, 204.27, 537.83, 301.5, 804.59, 814.82, 1173.77, 96.02, 346.09, 524.65, 872.16, 111.08, 387.29, 93.2, 151.91, 2810.83, 78.57, 58.29, 269, 110.38, 249.74, 337.56, 975.24, 287.07, 76.29, 355.72, 1341.48, 337.24, 464.41, 567.14, 873.8, 41.05, 554.97, 260.58, 436.03, 704.46, 315.93, 734.95, 285.94, 117.73, 526.88, 402.26, 568.9, 273.22, 103.74, 80.95, 311.2, 619.74, 121.83, 218.41, 114.34, 147.33, 779.73, 441.31, 274.43, 262.08, 301.44, 728.77, 244.34, 62.13, 209.33, 2345.93, 186.54, 536.91, 454.91, 189.31, 165, 935.9, 545.3, 382.22, 451.03, 269.39, 84.23, 61.11, 153.75, 984.42, 155.81, 663.36, 240.27, 70.11, 179.21, 814.31, 296.92, 429.35, 283.56, 180.41, 326.43, 235.01, 494.68, 145.04, 258.64, 378.42, 256.97, 418.26, 442.29, 315.92, 2736.29, 2096.64, 1645.49, 239.38, 775.77, 605, 4708.78, 2944.92, 633.11, 555.48, 1076.84, 370.76, 288.77, 201.34, 485.2, 594.83, 75.07, 107.2, 1279.97, 376.68, 419.71, 960.82, 321.64, 161.51, 640.71, 215.81, 102.17, 2206.73, 68.89, 599.39, 277.83, 777.17, 168.09, 251.92, 396.87, 670.71, 201.72, 106.74, 211.31, 1152.77, 528.05, 2173.22, 695.45, 985.44, 268.12, 298.23, 4952.07, 838.87, 786.96, 2219.31, 1245.53, 270.68, 284.68, 1115.43, 150.25, 149.35, 448.79, 262.38, 917.98, 142.47, 177.15, 230.08, 237.82, 335.2, 606.99, 113.45, 238.83, 346.07, 507.58, 191.78, 126.32, 324.75, 1637.22, 66.55, 395.15, 906.48, 110.79, 1210.63, 922.66, 128.79, 109.98, 263.7, 280.99, 195.05, 358.87, 205.66, 441.65, 282.82, 531.24, 74.8, 309.47, 471.47, 524.56, 106.52, 968.7, 67.83, 23.03, 476.29, 482.56, 540.95, 468.17, 223.16, 1959.74, 216.28, 113.54, 132.18, 575.15, 389.96, 208.66, 86.84, 1067.37, 1029.14, 144.44, 278.03, 314.29, 216.53, 143.53, 173.64, 475.26, 369.41, 287.35, 190.32, 19.74, 200.12, 147.16, 433.94, 534.82, 270.59, 59.85, 17.61, 133.54, 139.19, 502.64, 122.66, 218.81, 181.87, 367.08, 599.77, 1062.09, 384.94, 210.38, 937.25, 1606.00, 721.63, 135.1, 375.11, 361.81, 279.76, 81.11, 58.48, 288.26, 188.89, 403.09, 316.66, 472.88, 399.3, 148.17, 757.01, 109.63, 283.39, 459.95, 606.22, 196.31, 363.26, 671.27, 201.14, 292.13, 313.87, 494.12, 182.17, 718.98, 576.5, 303.48, 1710.89, 33.48, 72.49, 216.9, 336.1, 1556.99, 122.08, 367.15, 707.73, 529.03, 305.35, 259.76, 270.37, 274.22, 288.89, 93.54, 428.58, 518.34, 488.74, 497.68, 321.02, 285.27, 468.35, 357.72, 102.62, 361.02, 269.25, 905.84, 265.09, 168.63, 73.69, 119.15, 93.16, 488.79, 161.73, 405.26, 123.38, 505.9, 600.96, 988.33, 356.3, 360.44, 1752.70, 360.11, 254.07, 269.19, 2275.65, 1084.78, 392.15, 699.92, 209.74, 601.56, 304.19, 69.01, 857.13, 81.87, 100.4, 518.24, 273.44, 728.14, 183.08, 3,887.45, 390.44, 381.06, 60.74, 575.52, 97.94, 610.33)
+
+q25 <- quantile(data_1, 0.25)
+q25
+```
+
+#PRECONDITIONING CLUSTER 2 (PROFILE 11) STEM GRAPH
+```{r}
+library(reshape2)
+
+# STEM Data was imported
+
+# Reformatted data into long format
+Profile11 <- melt(DQO_STEM_Results_PC6_Trial_Profile_11, id.vars = "Protein Names", variable.name = "Stage", value.name = "n")
+
+# Convert the x-axis variable to a factor with the order as in the data file (Makes A 1st)
+Profile11$Stage <- factor(Profile11$Stage, levels = unique(Profile11$Stage))
+### Basic Plot for Profile 7 (Shows the dip at Pre-Met)
+ggplot(Profile11, aes(x= Stage, y=n, group=`Protein Names`, color=`Protein Names`)) + ylim(-100,8000) + #should be min and max of data
+  geom_line() +
+  labs(title = "Profile 11",
+       x = "Time Point",
+       y = "Fold Change",
+       color = "Gene") +
+  theme_minimal()
+View(Profile11)
+
+# Highlight AVERAGE in Profile11
+highlight_gene <- c("AVERAGE")
+
+#Vector for Group
+group_vector_Profile11 <- ifelse(Profile11$`Protein Names` %in% highlight_gene, "Average", "Other")
+View(group_vector_Profile11)
+df_Profile11 <- as.data.frame(Profile11)
+df_Profile11$Color <- c(group_vector_Profile11)
+colnames(df_Profile11) <- c("Protein Names", "Stage", "FC", "Group")
+View(df_Profile11)
+# Ensure that the group levels are factors for colors and opacity
+#Vector for Opacity
+opacity_values <- c("Average" = 1.0, "Other" = 0.5)
+df_Profile11$Group <- factor(df_Profile11$Group, levels = names(opacity_values))
+#Vector for Colors
+color_values <- c("Average" = "blue", "Other" = "grey")
+df_Profile11$Group <- factor(df_Profile11$Group, levels = names(color_values))
+# Make x-axis values numeric to change spacing
+df_Profile11$Stage_num <- recode(df_Profile11$Stage, "A" = 0, "C" = 14, "D" = 19)
+# Plot the data with the correct mapping
+Profile11_Graph <- ggplot(df_Profile11, aes(x= Stage_num, y= FC, group = `Protein Names`, alpha = Group, color = Group)) + ylim(-7000,10000) +
+  geom_line(size = 0.25) +
+  geom_line(data = subset(df_Profile11, df_Profile11$Group == "Average"), aes(color = Group), 
+            size = 0.75) +
+  geom_hline(yintercept = 0, linetype = 5, color = "black", size = .5) +
+  geom_vline(xintercept = 0, linetype = 5, color = "black", size = .5) +
+  scale_color_manual(values = c("Others" = "grey", "Average" = "blue")) +
+  scale_alpha_manual(values = opacity_values) +
+  scale_x_continuous(breaks = c(0, 14, 19), labels = c("A", "C", "D")) +  # Uneven spacing
+  labs(title = "Profile 11",
+       x = "Time Point",
+       y = "Fold Change",
+       color = "Gene Symbol") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, hjust = 0.5),  # Center title
+        axis.text.x = element_text(size = 14),  # Adjusts the text size of the x-axis tick labels
+        axis.text.y = element_text(size = 14),  # Adjusts the text size of the y-axis tick labels
+        axis.title.x = element_text(size = 14), # Adjusts the text size of the x-axis title
+        axis.title.y = element_text(size = 14), # Adjusts the text size of the y-axis title
+        legend.text = element_text(size = 10),
+        legend.title = element_blank(),
+        panel.grid = element_blank()) # Removes gridlines
+Profile11_Graph + guides(alpha = guide_none())
+```
+
+
+```{r}
+t.test(DQO_Data_With_and_Without_Lono$`YES LONO CC/CA DIFFERENTIAL`, DQO_Data_With_and_Without_Lono$`NO LONO CC/CA DIFFERENTIAL`, paired = TRUE)
+
+t.test(DQO_Data_With_and_Without_Lono$`YES LONO PC6C/PC6A DIFFERENTIAL`, DQO_Data_With_and_Without_Lono$`NO LONO PC6C/PC6A DIFFERENTIAL`, paired = TRUE)
+```
+
+##NO LONO STEM GRAPHS
+#Preconditioning Cluster 1 (Profiles 5 and 6)
+```{r}
+install.packages("khroma")
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(reshape2)
+library(khroma)
+
+# STEM Data was imported
+
+# Reformatted data into long format
+Cluster1P <- melt(NO_LONO_Preconditioning_STEM_Cluster_1, id.vars = "Protein Names", variable.name = "Stage", value.name = "n")
+
+# Convert the x-axis variable to a factor with the order as in the data file (Makes A 1st)
+Cluster1P$Stage <- factor(Cluster1P$Stage, levels = unique(Cluster1P$Stage))
+
+# Highlight AVERAGE in Cluster1PC6
+highlight_gene <- c("AVERAGE_PROFILE5", "AVERAGE_PROFILE6")
+
+#Vector for Group
+group_vector_Cluster1P <- ifelse(Cluster1P$`Protein Names` %in% highlight_gene, "Average", "Other")
+View(group_vector_Cluster1P)
+df_Cluster1P <- as.data.frame(Cluster1P)
+df_Cluster1P$Color <- c(group_vector_Cluster1P)
+colnames(df_Cluster1P) <- c("Protein Names", "Stage", "FC", "Group")
+View(df_Cluster1P)
+
+df_Cluster1P$Stage_num <- recode(df_Cluster1P$Stage, "A" = 0, "C" = 14, "D" = 19)
+
+# Create ranges for 25% ribbon
+df_Cluster1P$ymin_25_Cluster1P <- ifelse(df_Cluster1P$Stage == "A", 0, 
+                  ifelse(df_Cluster1P$Stage == "C", -383.45, 
+                         ifelse(df_Cluster1P$Stage == "D", 35.78, NA)))
+
+df_Cluster1P$ymax_25_Cluster1P <- ifelse(df_Cluster1P$Stage == "A", 0, 
+                  ifelse(df_Cluster1P$Stage == "C", -219.51, 
+                         ifelse(df_Cluster1P$Stage == "D", 134.45, NA)))
+# Create ranges for 50% ribbon
+df_Cluster1P$ymin_50_Cluster1P <- ifelse(df_Cluster1P$Stage == "A", 0, 
+                  ifelse(df_Cluster1P$Stage == "C", -508.97, 
+                         ifelse(df_Cluster1P$Stage == "D", 11.6, NA)))
+
+df_Cluster1P$ymax_50_Cluster1P <- ifelse(df_Cluster1P$Stage == "A", 0, 
+                  ifelse(df_Cluster1P$Stage == "C", -143.46, 
+                         ifelse(df_Cluster1P$Stage == "D", 211, NA)))
+# Create ranges for 75% ribbon
+df_Cluster1P$ymin_75_Cluster1P <- ifelse(df_Cluster1P$Stage == "A", 0, 
+                  ifelse(df_Cluster1P$Stage == "C", -802.73, 
+                         ifelse(df_Cluster1P$Stage == "D", -29.65, NA)))
+
+df_Cluster1P$ymax_75_Cluster1P <- ifelse(df_Cluster1P$Stage == "A", 0, 
+                  ifelse(df_Cluster1P$Stage == "C", -94.25, 
+                         ifelse(df_Cluster1P$Stage == "D", 379.91, NA)))
+# Create ranges for 100% ribbon
+df_Cluster1P$ymin_100_Cluster1P <- ifelse(df_Cluster1P$Stage == "A", 0, 
+                  ifelse(df_Cluster1P$Stage == "C", -14397.39, 
+                         ifelse(df_Cluster1P$Stage == "D", -2146, NA)))
+
+df_Cluster1P$ymax_100_Cluster1P <- ifelse(df_Cluster1P$Stage == "A", 0, 
+                  ifelse(df_Cluster1P$Stage == "C", -7.36, 
+                         ifelse(df_Cluster1P$Stage == "D", 3345.8, NA)))
+
+# Log transform data
+df_Cluster1P_log <- df_Cluster1P %>%
+  mutate(FC_log = sign(FC) * log(abs(FC) + 1))
+
+# Plot the data with the correct mapping
+Cluster1P_Graph <- ggplot(df_Cluster1P_log, aes(x= Stage_num, y= FC_log, group = `Protein Names`, alpha = Group, color = Group)) + ylim(-10,10) +
+  geom_ribbon(aes(ymin = (sign(ymin_100_Cluster1P) * log(abs(ymin_100_Cluster1P) + 1)), ymax = (sign(ymax_100_Cluster1P) * log(abs(ymax_100_Cluster1P) + 1))), fill = "#E5E5E5", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_75_Cluster1P) * log(abs(ymin_75_Cluster1P) + 1)), ymax = (sign(ymax_75_Cluster1P) * log(abs(ymax_75_Cluster1P) + 1))), fill = "#D3D3D3", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_50_Cluster1P) * log(abs(ymin_50_Cluster1P) + 1)), ymax = (sign(ymax_50_Cluster1P) * log(abs(ymax_50_Cluster1P) + 1))), fill = "#A0A0A0", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_25_Cluster1P) * log(abs(ymin_25_Cluster1P) + 1)), ymax = (sign(ymax_25_Cluster1P) * log(abs(ymax_25_Cluster1P) + 1))), fill = "#808080", size = 0) + # Shaded region
+  #geom_line(size = 0.05, color = "black") +
+  geom_line(data = subset(df_Cluster1P_log, df_Cluster1P_log$Group == "Average"), 
+            size = 1, alpha = 1) +
+  geom_hline(yintercept = 0, linetype = 5, color = "black", size = .5) +
+  geom_vline(xintercept = 0, linetype = 1, color = "black", size = .5) +
+  geom_hline(yintercept = -10, linetype = 1, color = "black", size = .5) +
+  scale_color_manual(values = c("Average" = "#004488")) +
+  #scale_alpha_manual(values = opacity_values) +
+  scale_x_continuous(breaks = c(0, 14, 19), labels = c("A", "C", "D")) +  # Uneven spacing
+  labs(x = "Time Point",
+       y = "Log(Fold Change)",
+       color = "Gene Symbol") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, hjust = 0.5),  # Center title
+        axis.text.x = element_text(size = 14),  # Adjusts the text size of the x-axis tick labels
+        axis.text.y = element_text(size = 14),  # Adjusts the text size of the y-axis tick labels
+        axis.title.x = element_text(size = 14), # Adjusts the text size of the x-axis title
+        axis.title.y = element_text(size = 14), # Adjusts the text size of the y-axis title
+        legend.text = element_text(size = 10),
+        legend.title = element_blank(),
+        panel.grid = element_blank()) # Removes gridlines
+Cluster1P_Graph + guides(alpha = guide_none())
+```
+#Control Cluster 1 (Profiles 7 and 2)
+```{r}
+install.packages("khroma")
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(reshape2)
+library(khroma)
+
+# STEM Data was imported
+
+# Reformatted data into long format
+Cluster1C <- melt(NO_LONO_Control_STEM_Cluster_1, id.vars = "Protein Names", variable.name = "Stage", value.name = "n")
+
+# Convert the x-axis variable to a factor with the order as in the data file (Makes A 1st)
+Cluster1C$Stage <- factor(Cluster1C$Stage, levels = unique(Cluster1C$Stage))
+
+# Highlight AVERAGE in Cluster1PC6
+highlight_gene <- c("AVERAGE_PROFILE7", "AVERAGE_PROFILE2")
+
+#Vector for Group
+group_vector_Cluster1C <- ifelse(Cluster1C$`Protein Names` %in% highlight_gene, "Average", "Other")
+View(group_vector_Cluster1C)
+df_Cluster1C <- as.data.frame(Cluster1C)
+df_Cluster1C$Color <- c(group_vector_Cluster1C)
+colnames(df_Cluster1C) <- c("Protein Names", "Stage", "FC", "Group")
+View(df_Cluster1C)
+
+df_Cluster1C$Stage_num <- recode(df_Cluster1C$Stage, "A" = 0, "C" = 14, "D" = 19)
+
+# Create ranges for 25% ribbon
+df_Cluster1C$ymin_25_Cluster1C <- ifelse(df_Cluster1C$Stage == "A", 0, 
+                  ifelse(df_Cluster1C$Stage == "C", -47.8975, 
+                         ifelse(df_Cluster1C$Stage == "D", -356.645, NA)))
+
+df_Cluster1C$ymax_25_Cluster1C <- ifelse(df_Cluster1C$Stage == "A", 0, 
+                  ifelse(df_Cluster1C$Stage == "C", -7.73625, 
+                         ifelse(df_Cluster1C$Stage == "D", -209.21625, NA)))
+# Create ranges for 50% ribbon
+df_Cluster1C$ymin_50_Cluster1C <- ifelse(df_Cluster1C$Stage == "A", 0, 
+                  ifelse(df_Cluster1C$Stage == "C", -76.1125, 
+                         ifelse(df_Cluster1C$Stage == "D", -452.8225, NA)))
+
+df_Cluster1C$ymax_50_Cluster1C <- ifelse(df_Cluster1C$Stage == "A", 0, 
+                  ifelse(df_Cluster1C$Stage == "C", 17.405, 
+                         ifelse(df_Cluster1C$Stage == "D", -159.2125, NA)))
+# Create ranges for 75% ribbon
+df_Cluster1C$ymin_75_Cluster1C <- ifelse(df_Cluster1C$Stage == "A", 0, 
+                  ifelse(df_Cluster1C$Stage == "C", -149.78375, 
+                         ifelse(df_Cluster1C$Stage == "D", -743.25625, NA)))
+
+df_Cluster1C$ymax_75_Cluster1C <- ifelse(df_Cluster1C$Stage == "A", 0, 
+                  ifelse(df_Cluster1C$Stage == "C", -94.25, 
+                         ifelse(df_Cluster1C$Stage == "D", -98.22375, NA)))
+# Create ranges for 100% ribbon
+df_Cluster1C$ymin_100_Cluster1C <- ifelse(df_Cluster1C$Stage == "A", 0, 
+                  ifelse(df_Cluster1C$Stage == "C", -1206.59, 
+                         ifelse(df_Cluster1C$Stage == "D", -6149.56, NA)))
+
+df_Cluster1C$ymax_100_Cluster1C <- ifelse(df_Cluster1C$Stage == "A", 0, 
+                  ifelse(df_Cluster1C$Stage == "C", 794.88, 
+                         ifelse(df_Cluster1C$Stage == "D", -20.38, NA)))
+
+# Log transform data
+df_Cluster1C_log <- df_Cluster1C %>%
+  mutate(FC_log = sign(FC) * log(abs(FC) + 1))
+
+# Plot the data with the correct mapping
+Cluster1C_Graph <- ggplot(df_Cluster1C_log, aes(x= Stage_num, y= FC_log, group = `Protein Names`, alpha = Group, color = Group)) + ylim(-10,10) +
+  geom_ribbon(aes(ymin = (sign(ymin_100_Cluster1C) * log(abs(ymin_100_Cluster1C) + 1)), ymax = (sign(ymax_100_Cluster1C) * log(abs(ymax_100_Cluster1C) + 1))), fill = "#E5E5E5", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_75_Cluster1C) * log(abs(ymin_75_Cluster1C) + 1)), ymax = (sign(ymax_75_Cluster1C) * log(abs(ymax_75_Cluster1C) + 1))), fill = "#D3D3D3", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_50_Cluster1C) * log(abs(ymin_50_Cluster1C) + 1)), ymax = (sign(ymax_50_Cluster1C) * log(abs(ymax_50_Cluster1C) + 1))), fill = "#A0A0A0", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_25_Cluster1C) * log(abs(ymin_25_Cluster1C) + 1)), ymax = (sign(ymax_25_Cluster1C) * log(abs(ymax_25_Cluster1C) + 1))), fill = "#808080", size = 0) + # Shaded region
+  #geom_line(size = 0.05, color = "black") +
+  geom_line(data = subset(df_Cluster1C_log, df_Cluster1C_log$Group == "Average"), 
+            size = 1, alpha = 1) +
+  geom_hline(yintercept = 0, linetype = 5, color = "black", size = .5) +
+  geom_vline(xintercept = 0, linetype = 1, color = "black", size = .5) +
+  geom_hline(yintercept = -10, linetype = 1, color = "black", size = .5) +
+  scale_color_manual(values = c("Average" = "#6699CC")) +
+  #scale_alpha_manual(values = opacity_values) +
+  scale_x_continuous(breaks = c(0, 14, 19), labels = c("A", "C", "D")) +  # Uneven spacing
+  labs(x = "Time Point",
+       y = "Log(Fold Change)",
+       color = "Gene Symbol") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, hjust = 0.5),  # Center title
+        axis.text.x = element_text(size = 14),  # Adjusts the text size of the x-axis tick labels
+        axis.text.y = element_text(size = 14),  # Adjusts the text size of the y-axis tick labels
+        axis.title.x = element_text(size = 14), # Adjusts the text size of the x-axis title
+        axis.title.y = element_text(size = 14), # Adjusts the text size of the y-axis title
+        legend.text = element_text(size = 10),
+        legend.title = element_blank(),
+        panel.grid = element_blank()) # Removes gridlines
+Cluster1C_Graph + guides(alpha = guide_none())
+```
+#Control Cluster 2 (Profile 13)
+```{r}
+install.packages("khroma")
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(reshape2)
+library(khroma)
+
+# STEM Data was imported
+
+# Reformatted data into long format
+Cluster2C <- melt(NO_LONO_Control_STEM_Cluster_2, id.vars = "Protein Names", variable.name = "Stage", value.name = "n")
+
+# Convert the x-axis variable to a factor with the order as in the data file (Makes A 1st)
+Cluster2C$Stage <- factor(Cluster2C$Stage, levels = unique(Cluster2C$Stage))
+
+# Highlight AVERAGE in Cluster1PC6
+highlight_gene <- c("AVERAGE_PROFILE13")
+
+#Vector for Group
+group_vector_Cluster2C <- ifelse(Cluster2C$`Protein Names` %in% highlight_gene, "Average", "Other")
+View(group_vector_Cluster2C)
+df_Cluster2C <- as.data.frame(Cluster2C)
+df_Cluster2C$Color <- c(group_vector_Cluster2C)
+colnames(df_Cluster2C) <- c("Protein Names", "Stage", "FC", "Group")
+View(df_Cluster2C)
+
+df_Cluster2C$Stage_num <- recode(df_Cluster2C$Stage, "A" = 0, "C" = 14, "D" = 19)
+
+# Create ranges for 25% ribbon
+df_Cluster2C$ymin_25_Cluster2C <- ifelse(df_Cluster2C$Stage == "A", 0, 
+                  ifelse(df_Cluster2C$Stage == "C", 78.64625, 
+                         ifelse(df_Cluster2C$Stage == "D", 283.4975, NA)))
+
+df_Cluster2C$ymax_25_Cluster2C <- ifelse(df_Cluster2C$Stage == "A", 0, 
+                  ifelse(df_Cluster2C$Stage == "C", 126.74625, 
+                         ifelse(df_Cluster2C$Stage == "D", 453.855, NA)))
+# Create ranges for 50% ribbon
+df_Cluster2C$ymin_50_Cluster2C <- ifelse(df_Cluster2C$Stage == "A", 0, 
+                  ifelse(df_Cluster2C$Stage == "C", 56.0875, 
+                         ifelse(df_Cluster2C$Stage == "D", 207.305, NA)))
+
+df_Cluster2C$ymax_50_Cluster2C <- ifelse(df_Cluster2C$Stage == "A", 0, 
+                  ifelse(df_Cluster2C$Stage == "C", 172.765, 
+                         ifelse(df_Cluster2C$Stage == "D", 607.7, NA)))
+# Create ranges for 75% ribbon
+df_Cluster2C$ymin_75_Cluster2C <- ifelse(df_Cluster2C$Stage == "A", 0, 
+                  ifelse(df_Cluster2C$Stage == "C", 41.3175, 
+                         ifelse(df_Cluster2C$Stage == "D", 138.92375, NA)))
+
+df_Cluster2C$ymax_75_Cluster2C <- ifelse(df_Cluster2C$Stage == "A", 0, 
+                  ifelse(df_Cluster2C$Stage == "C", 282.145, 
+                         ifelse(df_Cluster2C$Stage == "D", 869.345, NA)))
+# Create ranges for 100% ribbon
+df_Cluster2C$ymin_100_Cluster2C <- ifelse(df_Cluster2C$Stage == "A", 0, 
+                  ifelse(df_Cluster2C$Stage == "C", 8.25, 
+                         ifelse(df_Cluster2C$Stage == "D", 21.53, NA)))
+
+df_Cluster2C$ymax_100_Cluster2C <- ifelse(df_Cluster2C$Stage == "A", 0, 
+                  ifelse(df_Cluster2C$Stage == "C", 1574.43, 
+                         ifelse(df_Cluster2C$Stage == "D", 4906.2, NA)))
+
+# Log transform data
+df_Cluster2C_log <- df_Cluster2C %>%
+  mutate(FC_log = sign(FC) * log(abs(FC) + 1))
+
+# Plot the data with the correct mapping
+Cluster2C_Graph <- ggplot(df_Cluster2C_log, aes(x= Stage_num, y= FC_log, group = `Protein Names`, alpha = Group, color = Group)) + ylim(-10,10) +
+  geom_ribbon(aes(ymin = (sign(ymin_100_Cluster2C) * log(abs(ymin_100_Cluster2C) + 1)), ymax = (sign(ymax_100_Cluster2C) * log(abs(ymax_100_Cluster2C) + 1))), fill = "#E5E5E5", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_75_Cluster2C) * log(abs(ymin_75_Cluster2C) + 1)), ymax = (sign(ymax_75_Cluster2C) * log(abs(ymax_75_Cluster2C) + 1))), fill = "#D3D3D3", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_50_Cluster2C) * log(abs(ymin_50_Cluster2C) + 1)), ymax = (sign(ymax_50_Cluster2C) * log(abs(ymax_50_Cluster2C) + 1))), fill = "#A0A0A0", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_25_Cluster2C) * log(abs(ymin_25_Cluster2C) + 1)), ymax = (sign(ymax_25_Cluster2C) * log(abs(ymax_25_Cluster2C) + 1))), fill = "#808080", size = 0) + # Shaded region
+  #geom_line(size = 0.05, color = "black") +
+  geom_line(data = subset(df_Cluster2C_log, df_Cluster2C_log$Group == "Average"), 
+            size = 1, alpha = 1) +
+  geom_hline(yintercept = 0, linetype = 5, color = "black", size = .5) +
+  geom_vline(xintercept = 0, linetype = 1, color = "black", size = .5) +
+  geom_hline(yintercept = -10, linetype = 1, color = "black", size = .5) +
+  scale_color_manual(values = c("Average" = "#6699CC")) +
+  #scale_alpha_manual(values = opacity_values) +
+  scale_x_continuous(breaks = c(0, 14, 19), labels = c("A", "C", "D")) +  # Uneven spacing
+  labs(x = "Time Point",
+       y = "Log(Fold Change)",
+       color = "Gene Symbol") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 16, hjust = 0.5),  # Center title
+        axis.text.x = element_text(size = 14),  # Adjusts the text size of the x-axis tick labels
+        axis.text.y = element_text(size = 14),  # Adjusts the text size of the y-axis tick labels
+        axis.title.x = element_text(size = 14), # Adjusts the text size of the x-axis title
+        axis.title.y = element_text(size = 14), # Adjusts the text size of the y-axis title
+        legend.text = element_text(size = 10),
+        legend.title = element_blank(),
+        panel.grid = element_blank()) # Removes gridlines
+Cluster2C_Graph + guides(alpha = guide_none())
+```
+
+##STEM GRAPHS FOR MY THESIS (WITH LONO)
+#Control Cluster 1 (Profiles 7, 2, and 3) [WITH LONO]
+```{r}
+#install.packages("khroma")
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(reshape2)
+library(khroma)
+
+# STEM Data was imported
+
+# Reformatted data into long format
+Cluster1C_YESLONO <- melt(YES_LONO_Control_STEM_Cluster_1, id.vars = "Protein Names", variable.name = "Stage", value.name = "n")
+
+# Convert the x-axis variable to a factor with the order as in the data file (Makes A 1st)
+Cluster1C_YESLONO$Stage <- factor(Cluster1C_YESLONO$Stage, levels = unique(Cluster1C_YESLONO$Stage))
+
+# Highlight AVERAGE in Cluster1PC6
+highlight_gene <- c("AVERAGE")
+
+#Vector for Group
+group_vector_Cluster1C_YESLONO <- ifelse(Cluster1C_YESLONO$`Protein Names` %in% highlight_gene, "AVERAGE", "Other")
+View(group_vector_Cluster1C_YESLONO)
+df_Cluster1C_YESLONO <- as.data.frame(Cluster1C_YESLONO)
+df_Cluster1C_YESLONO$Color <- c(group_vector_Cluster1C_YESLONO)
+colnames(df_Cluster1C_YESLONO) <- c("Protein Names", "Stage", "FC", "Group")
+View(df_Cluster1C_YESLONO)
+
+df_Cluster1C_YESLONO$Stage_num <- recode(df_Cluster1C_YESLONO$Stage, "A" = 0, "C" = 14, "D" = 19)
+
+# Create ranges for 25% ribbon
+df_Cluster1C_YESLONO$ymin_25_Cluster1C_YESLONO <- ifelse(df_Cluster1C_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster1C_YESLONO$Stage == "C", -66.73, 
+                         ifelse(df_Cluster1C_YESLONO$Stage == "D", -333.01, NA)))
+
+df_Cluster1C_YESLONO$ymax_25_Cluster1C_YESLONO <- ifelse(df_Cluster1C_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster1C_YESLONO$Stage == "C", -19.72, 
+                         ifelse(df_Cluster1C_YESLONO$Stage == "D", -173.93, NA)))
+# Create ranges for 50% ribbon
+df_Cluster1C_YESLONO$ymin_50_Cluster1C_YESLONO <- ifelse(df_Cluster1C_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster1C_YESLONO$Stage == "C", -103.21, 
+                         ifelse(df_Cluster1C_YESLONO$Stage == "D", -448.88, NA)))
+
+df_Cluster1C_YESLONO$ymax_50_Cluster1C_YESLONO <- ifelse(df_Cluster1C_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster1C_YESLONO$Stage == "C", -1.89,
+                         ifelse(df_Cluster1C_YESLONO$Stage == "D", -131.8, NA)))
+# Create ranges for 75% ribbon
+df_Cluster1C_YESLONO$ymin_75_Cluster1C_YESLONO <- ifelse(df_Cluster1C_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster1C_YESLONO$Stage == "C", -196.83, 
+                         ifelse(df_Cluster1C_YESLONO$Stage == "D", -723.78, NA)))
+
+df_Cluster1C_YESLONO$ymax_75_Cluster1C_YESLONO <- ifelse(df_Cluster1C_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster1C_YESLONO$Stage == "C", 28.75, 
+                         ifelse(df_Cluster1C_YESLONO$Stage == "D", -97.38, NA)))
+# Create ranges for 100% ribbon
+df_Cluster1C_YESLONO$ymin_100_Cluster1C_YESLONO <- ifelse(df_Cluster1C_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster1C_YESLONO$Stage == "C", -2261.59, 
+                         ifelse(df_Cluster1C_YESLONO$Stage == "D", -6815.98, NA)))
+
+df_Cluster1C_YESLONO$ymax_100_Cluster1C_YESLONO <- ifelse(df_Cluster1C_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster1C_YESLONO$Stage == "C", 1462.78, 
+                         ifelse(df_Cluster1C_YESLONO$Stage == "D", -4.28, NA)))
+
+# Log transform data
+df_Cluster1C_log_YESLONO <- df_Cluster1C_YESLONO %>%
+  mutate(FC_log = sign(FC) * log(abs(FC) + 1))
+
+# Plot the data with the correct mapping
+Cluster1C_Graph_YESLONO <- ggplot(df_Cluster1C_log_YESLONO, aes(x= Stage_num, y= FC_log, group = `Protein Names`, alpha = Group, color = Group, fill = Group)) +
+  geom_ribbon(aes(ymin = (sign(ymin_100_Cluster1C_YESLONO) * log(abs(ymin_100_Cluster1C_YESLONO) + 1)), ymax = (sign(ymax_100_Cluster1C_YESLONO) * log(abs(ymax_100_Cluster1C_YESLONO) + 1))), fill = "#E5E5E5", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_75_Cluster1C_YESLONO) * log(abs(ymin_75_Cluster1C_YESLONO) + 1)), ymax = (sign(ymax_75_Cluster1C_YESLONO) * log(abs(ymax_75_Cluster1C_YESLONO) + 1))), fill = "#D3D3D3", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_50_Cluster1C_YESLONO) * log(abs(ymin_50_Cluster1C_YESLONO) + 1)), ymax = (sign(ymax_50_Cluster1C_YESLONO) * log(abs(ymax_50_Cluster1C_YESLONO) + 1))), fill = "#A0A0A0", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_25_Cluster1C_YESLONO) * log(abs(ymin_25_Cluster1C_YESLONO) + 1)), ymax = (sign(ymax_25_Cluster1C_YESLONO) * log(abs(ymax_25_Cluster1C_YESLONO) + 1))), fill = "#808080", size = 0) + # Shaded region
+  #geom_line(size = 0.05, color = "black") +
+  geom_ribbon(data = data.frame(x = 1, ymin = 0, ymax = 1, CI_level = "Middle 25%"),
+            aes(x = x, ymin = ymin, ymax = ymax, fill = CI_level), inherit.aes = FALSE) +
+  geom_ribbon(data = data.frame(x = 1, ymin = 0, ymax = 1, CI_level = "Middle 50%"),
+            aes(x = x, ymin = ymin, ymax = ymax, fill = CI_level), inherit.aes = FALSE) +
+  geom_ribbon(data = data.frame(x = 1, ymin = 0, ymax = 1, CI_level = "Middle 75%"),
+            aes(x = x, ymin = ymin, ymax = ymax, fill = CI_level), inherit.aes = FALSE) +
+  geom_ribbon(data = data.frame(x = 1, ymin = 0, ymax = 1, CI_level = "Middle 100%"),
+            aes(x = x, ymin = ymin, ymax = ymax, fill = CI_level), inherit.aes = FALSE) +
+  geom_line(data = subset(df_Cluster1C_log_YESLONO, df_Cluster1C_log_YESLONO$Group == "AVERAGE"), 
+            size = 1, alpha = 1) +
+  geom_hline(yintercept = 0, linetype = 5, color = "black", size = .25) +
+  geom_vline(xintercept = 0, linetype = 1, color = "black", size = .4) +
+  geom_hline(yintercept = -10, linetype = 1, color = "black", size = .4) +
+  scale_color_manual(values = c("AVERAGE" = "#4FAFFF"),
+                     labels = c("AVERAGE" = "Average")) +
+  scale_fill_manual( values = c("Middle 25%" = "#808080",
+                                "Middle 50%" = "#A0A0A0",
+                                "Middle 75%" = "#D3D3D3",
+                                "Middle 100%" = "#E5E5E5"),
+                     breaks = c("Middle 25%",
+                                "Middle 50%",
+                                "Middle 75%",
+                                "Middle 100%")) +
+  #scale_alpha_manual(values = opacity_values) +
+  scale_x_continuous(breaks = c(0, 14, 19), labels = c("A", "C", "D"), 
+                     expand = c(0, 0)) +  # X-axis tick marks at positions with custom labels
+  scale_y_continuous(limits = c(-10, 10),
+                     breaks = seq(-10, 10, by = 5),  # Adding y-axis tick marks at 5 unit intervals
+                     expand = c(0, 0)) +  # Ensures no extra space is added around the y-axis
+  guides(
+    color = guide_legend(
+    title = "Group",
+    override.aes = list(fill = NA)  # Remove the gray fill box behind the line
+  ),
+  fill = guide_legend(title = "Confidence Interval")
+  ) +
+  labs(title = "Cluster 1",
+       x = "Time Point",
+       y = "Phosphorylation Log Fold Change") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 14, hjust = 0.5),  # Center title
+        panel.grid = element_blank(),       # remove all gridlines
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        axis.ticks = element_line(color = "black"),
+        legend.key = element_rect(fill = "transparent", color = NA)
+        )
+Cluster1C_Graph_YESLONO + guides(alpha = guide_none())
+```
+#Control Cluster 2 (Profiles 8 and 3) [WITH LONO]
+```{r}
+#install.packages("khroma")
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(reshape2)
+library(khroma)
+
+# STEM Data was imported
+
+# Reformatted data into long format
+Cluster2C_YESLONO <- melt(YES_LONO_Control_STEM_Cluster_2, id.vars = "Protein Names", variable.name = "Stage", value.name = "n")
+
+# Convert the x-axis variable to a factor with the order as in the data file (Makes A 1st)
+Cluster2C_YESLONO$Stage <- factor(Cluster2C_YESLONO$Stage, levels = unique(Cluster2C_YESLONO$Stage))
+
+# Highlight AVERAGE in Cluster1PC6
+highlight_gene <- c("AVERAGE")
+
+#Vector for Group
+group_vector_Cluster2C_YESLONO <- ifelse(Cluster2C_YESLONO$`Protein Names` %in% highlight_gene, "AVERAGE", "Other")
+View(group_vector_Cluster2C_YESLONO)
+df_Cluster2C_YESLONO <- as.data.frame(Cluster2C_YESLONO)
+df_Cluster2C_YESLONO$Color <- c(group_vector_Cluster2C_YESLONO)
+colnames(df_Cluster2C_YESLONO) <- c("Protein Names", "Stage", "FC", "Group")
+View(df_Cluster2C_YESLONO)
+
+df_Cluster2C_YESLONO$Stage_num <- recode(df_Cluster2C_YESLONO$Stage, "A" = 0, "C" = 14, "D" = 19)
+
+# Create ranges for 25% ribbon
+df_Cluster2C_YESLONO$ymin_25_Cluster2C_YESLONO <- ifelse(df_Cluster2C_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster2C_YESLONO$Stage == "C", 3.79, 
+                         ifelse(df_Cluster2C_YESLONO$Stage == "D", 207.865, NA)))
+
+df_Cluster2C_YESLONO$ymax_25_Cluster2C_YESLONO <- ifelse(df_Cluster2C_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster2C_YESLONO$Stage == "C", 34.2675, 
+                         ifelse(df_Cluster2C_YESLONO$Stage == "D", 319.9175, NA)))
+# Create ranges for 50% ribbon
+df_Cluster2C_YESLONO$ymin_50_Cluster2C_YESLONO <- ifelse(df_Cluster2C_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster2C_YESLONO$Stage == "C", -13.9,
+                         ifelse(df_Cluster2C_YESLONO$Stage == "D", 147.92, NA)))
+
+df_Cluster2C_YESLONO$ymax_50_Cluster2C_YESLONO <- ifelse(df_Cluster2C_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster2C_YESLONO$Stage == "C", 62.485,
+                         ifelse(df_Cluster2C_YESLONO$Stage == "D", 428.495, NA)))
+# Create ranges for 75% ribbon
+df_Cluster2C_YESLONO$ymin_75_Cluster2C_YESLONO <- ifelse(df_Cluster2C_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster2C_YESLONO$Stage == "C", -40.76, 
+                         ifelse(df_Cluster2C_YESLONO$Stage == "D", 90.64, NA)))
+
+df_Cluster2C_YESLONO$ymax_75_Cluster2C_YESLONO <- ifelse(df_Cluster2C_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster2C_YESLONO$Stage == "C", 111.24, 
+                         ifelse(df_Cluster2C_YESLONO$Stage == "D", 707.595, NA)))
+# Create ranges for 100% ribbon
+df_Cluster2C_YESLONO$ymin_100_Cluster2C_YESLONO <- ifelse(df_Cluster2C_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster2C_YESLONO$Stage == "C", -514.03, 
+                         ifelse(df_Cluster2C_YESLONO$Stage == "D", 15.85, NA)))
+
+df_Cluster2C_YESLONO$ymax_100_Cluster2C_YESLONO <- ifelse(df_Cluster2C_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster2C_YESLONO$Stage == "C", 2467.91, 
+                         ifelse(df_Cluster2C_YESLONO$Stage == "D", 7504.34, NA)))
+
+# Log transform data
+df_Cluster2C_log_YESLONO <- df_Cluster2C_YESLONO %>%
+  mutate(FC_log = sign(FC) * log(abs(FC) + 1))
+
+# Plot the data with the correct mapping
+Cluster2C_Graph_YESLONO <- ggplot(df_Cluster2C_log_YESLONO, aes(x= Stage_num, y= FC_log, group = `Protein Names`, alpha = Group, color = Group, fill = Group)) +
+  geom_ribbon(aes(ymin = (sign(ymin_100_Cluster2C_YESLONO) * log(abs(ymin_100_Cluster2C_YESLONO) + 1)), ymax = (sign(ymax_100_Cluster2C_YESLONO) * log(abs(ymax_100_Cluster2C_YESLONO) + 1))), fill = "#E5E5E5", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_75_Cluster2C_YESLONO) * log(abs(ymin_75_Cluster2C_YESLONO) + 1)), ymax = (sign(ymax_75_Cluster2C_YESLONO) * log(abs(ymax_75_Cluster2C_YESLONO) + 1))), fill = "#D3D3D3", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_50_Cluster2C_YESLONO) * log(abs(ymin_50_Cluster2C_YESLONO) + 1)), ymax = (sign(ymax_50_Cluster2C_YESLONO) * log(abs(ymax_50_Cluster2C_YESLONO) + 1))), fill = "#A0A0A0", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_25_Cluster2C_YESLONO) * log(abs(ymin_25_Cluster2C_YESLONO) + 1)), ymax = (sign(ymax_25_Cluster2C_YESLONO) * log(abs(ymax_25_Cluster2C_YESLONO) + 1))), fill = "#808080", size = 0) + # Shaded region
+  geom_ribbon(data = data.frame(x = 1, ymin = 0, ymax = 1, CI_level = "Middle 25%"),
+            aes(x = x, ymin = ymin, ymax = ymax, fill = CI_level), inherit.aes = FALSE) +
+  geom_ribbon(data = data.frame(x = 1, ymin = 0, ymax = 1, CI_level = "Middle 50%"),
+            aes(x = x, ymin = ymin, ymax = ymax, fill = CI_level), inherit.aes = FALSE) +
+  geom_ribbon(data = data.frame(x = 1, ymin = 0, ymax = 1, CI_level = "Middle 75%"),
+            aes(x = x, ymin = ymin, ymax = ymax, fill = CI_level), inherit.aes = FALSE) +
+  geom_ribbon(data = data.frame(x = 1, ymin = 0, ymax = 1, CI_level = "Middle 100%"),
+            aes(x = x, ymin = ymin, ymax = ymax, fill = CI_level), inherit.aes = FALSE) +
+  #geom_line(size = 0.05, color = "black") +
+  geom_line(data = subset(df_Cluster2C_log_YESLONO, df_Cluster2C_log_YESLONO$Group == "AVERAGE"), 
+            size = 1, alpha = 1) +
+  geom_hline(yintercept = 0, linetype = 5, color = "black", size = .25) +
+  geom_vline(xintercept = 0, linetype = 1, color = "black", size = .4) +
+  geom_hline(yintercept = -10, linetype = 1, color = "black", size = .4) +
+  scale_color_manual(values = c("AVERAGE" = "#4FAFFF"),
+                     labels = c("AVERAGE" = "Average")) +
+  scale_fill_manual( values = c("Middle 25%" = "#808080",
+                                "Middle 50%" = "#A0A0A0",
+                                "Middle 75%" = "#D3D3D3",
+                                "Middle 100%" = "#E5E5E5"),
+                     breaks = c("Middle 25%",
+                                "Middle 50%",
+                                "Middle 75%",
+                                "Middle 100%")) +
+  #scale_alpha_manual(values = opacity_values) +
+  scale_x_continuous(breaks = c(0, 14, 19), labels = c("A", "C", "D"),
+                     expand = c(0,0)) +
+  scale_y_continuous(limits = c(-10, 10),
+                     breaks = seq(-10, 10, by = 5),
+                     expand = c(0,0)) +
+  guides(
+    color = guide_legend(
+      title = "Group",
+      override.aes = list(fill = NA)
+    ),
+    fill = guide_legend(title = "Confidence Interval")
+  ) +
+  labs(title = "Cluster 2",
+       x = "Time Point",
+       y = "Phosphorylation Log Fold Change") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 14, hjust = 0.5),  # Center title
+        panel.grid = element_blank(),       # remove all gridlines
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        axis.ticks = element_line(color = "black"),
+        legend.key = element_rect(fill = "transparent", color = NA)
+        )
+Cluster2C_Graph_YESLONO + guides(alpha = guide_none())
+```
+#Preconditioning Cluster 1 (Profiles 14 and 10) [WITH LONO]
+```{r}
+#install.packages("khroma")
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(reshape2)
+library(khroma)
+
+# STEM Data was imported
+
+# Reformatted data into long format
+Cluster1P_YESLONO <- melt(YES_LONO_Preconditioning_STEM_Cluster_1, id.vars = "Protein Names", variable.name = "Stage", value.name = "n")
+
+# Convert the x-axis variable to a factor with the order as in the data file (Makes A 1st)
+Cluster1P_YESLONO$Stage <- factor(Cluster1P_YESLONO$Stage, levels = unique(Cluster1P_YESLONO$Stage))
+
+# Highlight AVERAGE in Cluster1PC6
+highlight_gene <- c("AVERAGE")
+
+#Vector for Group
+group_vector_Cluster1P_YESLONO <- ifelse(Cluster1P_YESLONO$`Protein Names` %in% highlight_gene, "AVERAGE", "Other")
+View(group_vector_Cluster1P_YESLONO)
+df_Cluster1P_YESLONO <- as.data.frame(Cluster1P_YESLONO)
+df_Cluster1P_YESLONO$Color <- c(group_vector_Cluster1P_YESLONO)
+colnames(df_Cluster1P_YESLONO) <- c("Protein Names", "Stage", "FC", "Group")
+View(df_Cluster1P_YESLONO)
+
+df_Cluster1P_YESLONO$Stage_num <- recode(df_Cluster1P_YESLONO$Stage, "A" = 0, "C" = 14, "D" = 19)
+
+# Create ranges for 25% ribbon
+df_Cluster1P_YESLONO$ymin_25_Cluster1P_YESLONO <- ifelse(df_Cluster1P_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster1P_YESLONO$Stage == "C", 441.79, 
+                         ifelse(df_Cluster1P_YESLONO$Stage == "D", 117.14, NA)))
+
+df_Cluster1P_YESLONO$ymax_25_Cluster1P_YESLONO <- ifelse(df_Cluster1P_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster1P_YESLONO$Stage == "C",736.85, 
+                         ifelse(df_Cluster1P_YESLONO$Stage == "D", 287.35, NA)))
+# Create ranges for 50% ribbon
+df_Cluster1P_YESLONO$ymin_50_Cluster1P_YESLONO <- ifelse(df_Cluster1P_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster1P_YESLONO$Stage == "C", 310.8, 
+                         ifelse(df_Cluster1P_YESLONO$Stage == "D", 58.29, NA)))
+
+df_Cluster1P_YESLONO$ymax_50_Cluster1P_YESLONO <- ifelse(df_Cluster1P_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster1P_YESLONO$Stage == "C", 981.29,
+                         ifelse(df_Cluster1P_YESLONO$Stage == "D", 440.96, NA)))
+# Create ranges for 75% ribbon
+df_Cluster1P_YESLONO$ymin_75_Cluster1P_YESLONO <- ifelse(df_Cluster1P_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster1P_YESLONO$Stage == "C", 193.57, 
+                         ifelse(df_Cluster1P_YESLONO$Stage == "D", 0.48, NA)))
+
+df_Cluster1P_YESLONO$ymax_75_Cluster1P_YESLONO <- ifelse(df_Cluster1P_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster1P_YESLONO$Stage == "C", 1504.43, 
+                         ifelse(df_Cluster1P_YESLONO$Stage == "D", 699.92, NA)))
+# Create ranges for 100% ribbon
+df_Cluster1P_YESLONO$ymin_100_Cluster1P_YESLONO <- ifelse(df_Cluster1P_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster1P_YESLONO$Stage == "C", 11.18, 
+                         ifelse(df_Cluster1P_YESLONO$Stage == "D", -1050.14, NA)))
+
+df_Cluster1P_YESLONO$ymax_100_Cluster1P_YESLONO <- ifelse(df_Cluster1P_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster1P_YESLONO$Stage == "C", 9770.15, 
+                         ifelse(df_Cluster1P_YESLONO$Stage == "D", 4952.07, NA)))
+
+# Log transform data
+df_Cluster1P_log_YESLONO <- df_Cluster1P_YESLONO %>%
+  mutate(FC_log = sign(FC) * log(abs(FC) + 1))
+
+# Plot the data with the correct mapping
+Cluster1P_Graph_YESLONO <- ggplot(df_Cluster1P_log_YESLONO, aes(x= Stage_num, y= FC_log, group = `Protein Names`, alpha = Group, color = Group, fill = Group)) +
+  geom_ribbon(aes(ymin = (sign(ymin_100_Cluster1P_YESLONO) * log(abs(ymin_100_Cluster1P_YESLONO) + 1)), ymax = (sign(ymax_100_Cluster1P_YESLONO) * log(abs(ymax_100_Cluster1P_YESLONO) + 1))), fill = "#E5E5E5", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_75_Cluster1P_YESLONO) * log(abs(ymin_75_Cluster1P_YESLONO) + 1)), ymax = (sign(ymax_75_Cluster1P_YESLONO) * log(abs(ymax_75_Cluster1P_YESLONO) + 1))), fill = "#D3D3D3", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_50_Cluster1P_YESLONO) * log(abs(ymin_50_Cluster1P_YESLONO) + 1)), ymax = (sign(ymax_50_Cluster1P_YESLONO) * log(abs(ymax_50_Cluster1P_YESLONO) + 1))), fill = "#A0A0A0", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_25_Cluster1P_YESLONO) * log(abs(ymin_25_Cluster1P_YESLONO) + 1)), ymax = (sign(ymax_25_Cluster1P_YESLONO) * log(abs(ymax_25_Cluster1P_YESLONO) + 1))), fill = "#808080", size = 0) + # Shaded region
+  geom_ribbon(data = data.frame(x = 1, ymin = 0, ymax = 1, CI_level = "Middle 25%"),
+            aes(x = x, ymin = ymin, ymax = ymax, fill = CI_level), inherit.aes = FALSE) +
+  geom_ribbon(data = data.frame(x = 1, ymin = 0, ymax = 1, CI_level = "Middle 50%"),
+            aes(x = x, ymin = ymin, ymax = ymax, fill = CI_level), inherit.aes = FALSE) +
+  geom_ribbon(data = data.frame(x = 1, ymin = 0, ymax = 1, CI_level = "Middle 75%"),
+            aes(x = x, ymin = ymin, ymax = ymax, fill = CI_level), inherit.aes = FALSE) +
+  geom_ribbon(data = data.frame(x = 1, ymin = 0, ymax = 1, CI_level = "Middle 100%"),
+            aes(x = x, ymin = ymin, ymax = ymax, fill = CI_level), inherit.aes = FALSE) +
+  #geom_line(size = 0.05, color = "black") +
+  geom_line(data = subset(df_Cluster1P_log_YESLONO, df_Cluster1P_log_YESLONO$Group == "AVERAGE"), 
+            size = 1, alpha = 1) +
+  geom_hline(yintercept = 0, linetype = 5, color = "black", size = .25) +
+  geom_vline(xintercept = 0, linetype = 1, color = "black", size = .4) +
+  geom_hline(yintercept = -10, linetype = 1, color = "black", size = .4) +
+  scale_color_manual(values = c("AVERAGE" = "#0059B2"),
+                     labels = c("AVERAGE" = "Average")) +
+  scale_fill_manual( values = c("Middle 25%" = "#808080",
+                                "Middle 50%" = "#A0A0A0",
+                                "Middle 75%" = "#D3D3D3",
+                                "Middle 100%" = "#E5E5E5"),
+                     breaks = c("Middle 25%",
+                                "Middle 50%",
+                                "Middle 75%",
+                                "Middle 100%")) +
+  #scale_alpha_manual(values = opacity_values) +
+  scale_x_continuous(breaks = c(0, 14, 19), labels = c("A", "C", "D"),
+                     expand = c(0, 0)) +  # Uneven spacing
+  scale_y_continuous(limits = c(-10, 10),
+                     breaks = seq(-10, 10, by = 5),
+                     expand = c(0, 0)) +
+  guides(
+    color = guide_legend(
+      title = "Group",
+      override.aes = list(fill = NA)
+    ),
+    fill = guide_legend(title = "Confidence Interval")
+  ) +
+  labs(title = "Cluster 1",
+       x = "Time Point",
+       y = "Phosphorylation Log Fold Change") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 14, hjust = 0.5),  # Center title
+        panel.grid = element_blank(),       # remove all gridlines
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        axis.ticks = element_line(color = "black"),
+        legend.key = element_rect(fill = "transparent", color = NA)
+        )
+Cluster1P_Graph_YESLONO + guides(alpha = guide_none())
+```
+#Preconditioning Cluster 2 (Profile 11) [WITH LONO]
+```{r}
+#install.packages("khroma")
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(reshape2)
+library(khroma)
+
+# STEM Data was imported
+
+# Reformatted data into long format
+Cluster2P_YESLONO <- melt(YES_LONO_Preconditioning_STEM_Cluster_2, id.vars = "Protein Names", variable.name = "Stage", value.name = "n")
+
+# Convert the x-axis variable to a factor with the order as in the data file (Makes A 1st)
+Cluster2P_YESLONO$Stage <- factor(Cluster2P_YESLONO$Stage, levels = unique(Cluster2P_YESLONO$Stage))
+
+# Highlight AVERAGE in Cluster1PC6
+highlight_gene <- c("AVERAGE")
+
+#Vector for Group
+group_vector_Cluster2P_YESLONO <- ifelse(Cluster2P_YESLONO$`Protein Names` %in% highlight_gene, "AVERAGE", "Other")
+View(group_vector_Cluster2P_YESLONO)
+df_Cluster2P_YESLONO <- as.data.frame(Cluster2P_YESLONO)
+df_Cluster2P_YESLONO$Color <- c(group_vector_Cluster2P_YESLONO)
+colnames(df_Cluster2P_YESLONO) <- c("Protein Names", "Stage", "FC", "Group")
+View(df_Cluster2P_YESLONO)
+
+df_Cluster2P_YESLONO$Stage_num <- recode(df_Cluster2P_YESLONO$Stage, "A" = 0, "C" = 14, "D" = 19)
+
+# Create ranges for 25% ribbon
+df_Cluster2P_YESLONO$ymin_25_Cluster2P_YESLONO <- ifelse(df_Cluster2P_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster2P_YESLONO$Stage == "C", 314.63, 
+                         ifelse(df_Cluster2P_YESLONO$Stage == "D", 290.2, NA)))
+
+df_Cluster2P_YESLONO$ymax_25_Cluster2P_YESLONO <- ifelse(df_Cluster2P_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster2P_YESLONO$Stage == "C",520.9575, 
+                         ifelse(df_Cluster2P_YESLONO$Stage == "D", 449.995, NA)))
+# Create ranges for 50% ribbon
+df_Cluster2P_YESLONO$ymin_50_Cluster2P_YESLONO <- ifelse(df_Cluster2P_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster2P_YESLONO$Stage == "C", 226.55, 
+                         ifelse(df_Cluster2P_YESLONO$Stage == "D", 209.1, NA)))
+
+df_Cluster2P_YESLONO$ymax_50_Cluster2P_YESLONO <- ifelse(df_Cluster2P_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster2P_YESLONO$Stage == "C", 744.88,
+                         ifelse(df_Cluster2P_YESLONO$Stage == "D", 674.625, NA)))
+# Create ranges for 75% ribbon
+df_Cluster2P_YESLONO$ymin_75_Cluster2P_YESLONO <- ifelse(df_Cluster2P_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster2P_YESLONO$Stage == "C", 149.4525, 
+                         ifelse(df_Cluster2P_YESLONO$Stage == "D", 143.5275, NA)))
+
+df_Cluster2P_YESLONO$ymax_75_Cluster2P_YESLONO <- ifelse(df_Cluster2P_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster2P_YESLONO$Stage == "C", 1020.6025, 
+                         ifelse(df_Cluster2P_YESLONO$Stage == "D", 913.1775, NA)))
+# Create ranges for 100% ribbon
+df_Cluster2P_YESLONO$ymin_100_Cluster2P_YESLONO <- ifelse(df_Cluster2P_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster2P_YESLONO$Stage == "C", 40.61, 
+                         ifelse(df_Cluster2P_YESLONO$Stage == "D", 35.78, NA)))
+
+df_Cluster2P_YESLONO$ymax_100_Cluster2P_YESLONO <- ifelse(df_Cluster2P_YESLONO$Stage == "A", 0, 
+                  ifelse(df_Cluster2P_YESLONO$Stage == "C", 7362.46, 
+                         ifelse(df_Cluster2P_YESLONO$Stage == "D", 6697.19, NA)))
+
+# Log transform data
+df_Cluster2P_log_YESLONO <- df_Cluster2P_YESLONO %>%
+  mutate(FC_log = sign(FC) * log(abs(FC) + 1))
+
+# Plot the data with the correct mapping
+Cluster2P_Graph_YESLONO <- ggplot(df_Cluster2P_log_YESLONO, aes(x= Stage_num, y= FC_log, group = `Protein Names`, alpha = Group, color = Group, fill = Group)) +
+  geom_ribbon(aes(ymin = (sign(ymin_100_Cluster2P_YESLONO) * log(abs(ymin_100_Cluster2P_YESLONO) + 1)), ymax = (sign(ymax_100_Cluster2P_YESLONO) * log(abs(ymax_100_Cluster2P_YESLONO) + 1))), fill = "#E5E5E5", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_75_Cluster2P_YESLONO) * log(abs(ymin_75_Cluster2P_YESLONO) + 1)), ymax = (sign(ymax_75_Cluster2P_YESLONO) * log(abs(ymax_75_Cluster2P_YESLONO) + 1))), fill = "#D3D3D3", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_50_Cluster2P_YESLONO) * log(abs(ymin_50_Cluster2P_YESLONO) + 1)), ymax = (sign(ymax_50_Cluster2P_YESLONO) * log(abs(ymax_50_Cluster2P_YESLONO) + 1))), fill = "#A0A0A0", size = 0) + # Shaded region
+  geom_ribbon(aes(ymin = (sign(ymin_25_Cluster2P_YESLONO) * log(abs(ymin_25_Cluster2P_YESLONO) + 1)), ymax = (sign(ymax_25_Cluster2P_YESLONO) * log(abs(ymax_25_Cluster2P_YESLONO) + 1))), fill = "#808080", size = 0) + # Shaded region
+  #geom_line(size = 0.05, color = "black") +
+  geom_ribbon(data = data.frame(x = 1, ymin = 0, ymax = 1, CI_level = "Middle 25%"),
+            aes(x = x, ymin = ymin, ymax = ymax, fill = CI_level), inherit.aes = FALSE) +
+  geom_ribbon(data = data.frame(x = 1, ymin = 0, ymax = 1, CI_level = "Middle 50%"),
+            aes(x = x, ymin = ymin, ymax = ymax, fill = CI_level), inherit.aes = FALSE) +
+  geom_ribbon(data = data.frame(x = 1, ymin = 0, ymax = 1, CI_level = "Middle 75%"),
+            aes(x = x, ymin = ymin, ymax = ymax, fill = CI_level), inherit.aes = FALSE) +
+  geom_ribbon(data = data.frame(x = 1, ymin = 0, ymax = 1, CI_level = "Middle 100%"),
+            aes(x = x, ymin = ymin, ymax = ymax, fill = CI_level), inherit.aes = FALSE) +
+  geom_line(data = subset(df_Cluster2P_log_YESLONO, df_Cluster2P_log_YESLONO$Group == "AVERAGE"), 
+            size = 1, alpha = 1) +
+  geom_hline(yintercept = 0, linetype = 5, color = "black", size = .25) +
+  geom_vline(xintercept = 0, linetype = 1, color = "black", size = .4) +
+  geom_hline(yintercept = -10, linetype = 1, color = "black", size = .4) +
+  scale_color_manual(values = c("AVERAGE" = "#0059B2"),
+                     labels = c("AVERAGE" = "Average")) +
+  scale_fill_manual( values = c("Middle 25%" = "#808080",
+                                "Middle 50%" = "#A0A0A0",
+                                "Middle 75%" = "#D3D3D3",
+                                "Middle 100%" = "#E5E5E5"),
+                     breaks = c("Middle 25%",
+                                "Middle 50%",
+                                "Middle 75%",
+                                "Middle 100%")) +
+  #scale_alpha_manual(values = opacity_values) +
+  scale_x_continuous(breaks = c(0, 14, 19), labels = c("A", "C", "D"),
+                     expand = c(0,0)) +
+  scale_y_continuous(limits = c(-10, 10),
+                     breaks = seq(-10, 10, by = 5),
+                     expand = c(0,0)) +
+  guides(
+    color = guide_legend(
+      title = "Group",
+      override.aes = list(fill = NA)
+    ),
+    fill = guide_legend(title = "Confidence Interval")
+  ) +
+  labs(title = "Cluster 2",
+       x = "Time Point",
+       y = "Phosphorylation Log Fold Change") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 14, hjust = 0.5),  # Center title
+        panel.grid = element_blank(),       # remove all gridlines
+        legend.title = element_blank(),
+        legend.position = "bottom",
+        axis.ticks = element_line(color = "black"),
+        legend.key = element_rect(fill = "transparent", color = NA)
+        )
+Cluster2P_Graph_YESLONO + guides(alpha = guide_none())
+```
+
+#Protein Abundance Analysis for Lono Figure
+```{r}
+##FOR LONO
+# STEM Data was imported
+
+# Install packages if needed
+library(dplyr)
+
+# Define your sets of columns
+cols_Lono <- c("lono231009_CA_phosphorylation", "lono231009_CC_phosphorylation", "lono231009_CD_phosphorylation", "lono231016_PC6C_phosphorylation", "lono231016_PC6D_phosphorylation")
+cols_NotLono <- c("kolohe231011_CA_phosphorylation", "kolohe231011_CC_phosphorylation", "kolohe231011_CD_phosphorylation", "kolohe231016_PC6A_phosphorylation", "kolohe231016_PC6B_phosphorylation", "kolohe231016_PC6C_phosphorylation", "kolohe231016_PC6D_phosphorylation", "liho231012_CA_phosphorylation", "liho231012_CC_phosphorylation", "liho231012_CD_phosphorylation", "liho231018_PC6A_phosphorylation", "liho231018_PC6B_phosphorylation", "liho231018_PC6D_phosphorylation", "nainoa231011_CA_phosphorylation", "nainoa231011_CC_phosphorylation", "nainoa231011_CD_phosphorylation", "nainoa231016_PC6A_phosphorylation", "nainoa231016_PC6B_phosphorylation", "nainoa231016_PC6D_phosphorylation", "hoku231009_CA_phosphorylation", "hoku231009_CC_phosphorylation", "hoku231009_CD_phosphorylation", "hoku231019_PC6A_phosphorylation", "hoku231019_PC6C_phosphorylation", "hoku231019_PC6D_phosphorylation")
+
+# Making sure the columns are numeric
+DQO_Abundance_Data[cols_Lono] <- lapply(DQO_Abundance_Data[cols_Lono], as.numeric)
+DQO_Abundance_Data[cols_NotLono] <- lapply(DQO_Abundance_Data[cols_NotLono], as.numeric)
+
+# Function to test difference row-by-row (via t-test) while accounting for any NAs
+compare_groups <- function(row) {
+  lono <- as.numeric(row[cols_Lono])
+  notLono <- as.numeric(row[cols_NotLono])
+  
+  # Remove NAs from both groups
+  lono <- lono[!is.na(lono)]
+  notLono <- notLono[!is.na(notLono)]
+  
+  # Ensure both groups have enough data points to perform the test
+  if (length(lono) < 2 || length(notLono) < 2) {
+    return(NA)  # Return NA if there aren't enough valid data points
+  }
+  
+  # Perform the t-test (Welch’s t-test for unequal variance)
+  test <- tryCatch(
+    t.test(lono, notLono)$p.value, 
+    error = function(e) NA
+  )
+  
+  return(test)
+}
+
+# Apply the function to each row
+DQO_Abundance_Data$p_value_Lono <- apply(DQO_Abundance_Data, 1, compare_groups)
+
+# Filter rows with significant differences (e.g., p < 0.05)
+significant_rows_Lono <- DQO_Abundance_Data %>% filter(p_value_Lono < 0.05)
+
+# Sorting rows by biggest difference between Lono values and non-Lono values
+calculate_difference <- function(row) {
+  lono <- as.numeric(row[cols_Lono])
+  notLono <- as.numeric(row[cols_NotLono])
+  
+  # Remove NA values if present
+  lono <- lono[!is.na(lono)]
+  notLono <- notLono[!is.na(notLono)]
+  
+  if (length(lono) < 1 || length(notLono) < 1) return(NA)
+  
+  # Calculate the absolute differences between each corresponding value in group1 and group2
+  differences <- abs(mean(lono) - mean(notLono))  # Mean difference or sum of abs differences can be used
+  
+  return(differences)
+}
+significant_rows_Lono$mean_difference <- apply(significant_rows_Lono, 1, calculate_difference)
+significant_rows_Lono_sorted <- significant_rows_Lono[order(-significant_rows_Lono$mean_difference), ]
+
+# View the sorted dataframe
+head(significant_rows_Lono_sorted)
+
+# Export the dataframe to an Excel file
+install.packages("writexl")
+library(writexl)
+write_xlsx(significant_rows_Lono_sorted, "significant_rows.xlsx") #in Desktop saved as "DQO Significantly Different Lono Abundance Data"
+
+##FOR KOLOHE
+# Define your sets of columns
+cols_Kolohe <- c("kolohe231011_CA_phosphorylation", "kolohe231011_CC_phosphorylation", "kolohe231011_CD_phosphorylation", "kolohe231016_PC6A_phosphorylation", "kolohe231016_PC6B_phosphorylation", "kolohe231016_PC6C_phosphorylation", "kolohe231016_PC6D_phosphorylation")
+cols_NotKolohe <- c("liho231012_CA_phosphorylation", "liho231012_CC_phosphorylation", "liho231012_CD_phosphorylation", "liho231018_PC6A_phosphorylation", "liho231018_PC6B_phosphorylation", "liho231018_PC6D_phosphorylation", "nainoa231011_CA_phosphorylation", "nainoa231011_CC_phosphorylation", "nainoa231011_CD_phosphorylation", "nainoa231016_PC6A_phosphorylation", "nainoa231016_PC6B_phosphorylation", "nainoa231016_PC6D_phosphorylation", "lono231009_CA_phosphorylation", "lono231009_CC_phosphorylation", "lono231009_CD_phosphorylation", "lono231016_PC6C_phosphorylation", "lono231016_PC6D_phosphorylation", "hoku231009_CA_phosphorylation", "hoku231009_CC_phosphorylation", "hoku231009_CD_phosphorylation", "hoku231019_PC6A_phosphorylation", "hoku231019_PC6C_phosphorylation", "hoku231019_PC6D_phosphorylation")
+
+# Making sure the columns are numeric
+DQO_Abundance_Data[cols_Kolohe] <- lapply(DQO_Abundance_Data[cols_Kolohe], as.numeric)
+DQO_Abundance_Data[cols_NotKolohe] <- lapply(DQO_Abundance_Data[cols_NotKolohe], as.numeric)
+
+# Function to test difference row-by-row with NA handling
+compare_groups <- function(row) {
+  kolohe <- as.numeric(row[cols_Kolohe])
+  notKolohe <- as.numeric(row[cols_NotKolohe])
+  
+  # Remove NAs from both groups
+  kolohe <- kolohe[!is.na(kolohe)]
+  notKolohe <- notKolohe[!is.na(notKolohe)]
+  
+  # Ensure both groups have enough data points to perform the test
+  if (length(kolohe) < 2 || length(notKolohe) < 2) {
+    return(NA)  # Return NA if there aren't enough valid data points
+  }
+  
+  # Perform the t-test (Welch’s t-test for unequal variance)
+  test <- tryCatch(
+    t.test(kolohe, notKolohe)$p.value, 
+    error = function(e) NA
+  )
+  
+  return(test)
+}
+
+# Apply the function to each row
+DQO_Abundance_Data$p_value_Kolohe <- apply(DQO_Abundance_Data, 1, compare_groups)
+
+# Filter rows with significant differences (e.g., p < 0.05)
+significant_rows_Kolohe <- DQO_Abundance_Data %>% filter(p_value_Kolohe < 0.05) #There being over 600 rows in this shows there are also significant differences in abundance between other individuals, which is expected given more interindividual variation than intraindividual
+```
+
+#Protein Phosphorylation Analysis for Lono Figure
+```{r}
+##FOR LONO
+# STEM Data was imported
+
+# Install packages if needed
+library(dplyr)
+
+# Define your sets of columns
+cols_Lono_ <- c("lono231009_CA_phosphorylation", "lono231009_CC_phosphorylation", "lono231009_CD_phosphorylation", "lono231016_PC6C_phosphorylation", "lono231016_PC6D_phosphorylation")
+cols_NotLono_ <- c("kolohe231011_CA_phosphorylation", "liho231012_CA_phosphorylation", "nainoa231011_CA_phosphorylation", "hoku231009_CA_phosphorylation", "kolohe231011_CC_phosphorylation", "liho231012_CC_phosphorylation", "nainoa231011_CC_phosphorylation", "hoku231009_CC_phosphorylation", "kolohe231011_CD_phosphorylation", "liho231012_CD_phosphorylation", "nainoa231011_CD_phosphorylation", "hoku231009_CD_phosphorylation", "kolohe231016_PC6A_phosphorylation", "liho231018_PC6A_phosphorylation", "nainoa231016_PC6A_phosphorylation", "hoku231019_PC6A_phosphorylation", "kolohe231016_PC6B_phosphorylation", "liho231018_PC6B_phosphorylation", "nainoa231016_PC6B_phosphorylation", "kolohe231016_PC6C_phosphorylation", "hoku231019_PC6C_phosphorylation", "kolohe231016_PC6D_phosphorylation", "liho231018_PC6D_phosphorylation", "nainoa231016_PC6D_phosphorylation", "hoku231019_PC6D_phosphorylation")
+
+# Making sure the columns are numeric
+DQO_Phosphorylation_Data[cols_Lono_] <- lapply(DQO_Phosphorylation_Data[cols_Lono_], as.numeric)
+DQO_Phosphorylation_Data[cols_NotLono_] <- lapply(DQO_Phosphorylation_Data[cols_NotLono_], as.numeric)
+
+# Function to test difference row-by-row with NA handling
+compare_groups <- function(row) {
+  lono_ <- as.numeric(row[cols_Lono_])
+  notLono_ <- as.numeric(row[cols_NotLono_])
+  
+  # Remove NAs from both groups
+  lono_ <- lono_[!is.na(lono_)]
+  notLono_ <- notLono_[!is.na(notLono_)]
+  
+  # Ensure both groups have enough data points to perform the test
+  if (length(lono_) < 2 || length(notLono_) < 2) {
+    return(NA)  # Return NA if there aren't enough valid data points
+  }
+  
+  # Perform the t-test (Welch’s t-test for unequal variance)
+  test <- tryCatch(
+    t.test(lono_, notLono_)$p.value, 
+    error = function(e) NA
+  )
+  
+  return(test)
+}
+
+# Apply the function to each row
+DQO_Phosphorylation_Data$p_value_Lono_ <- apply(DQO_Phosphorylation_Data, 1, compare_groups)
+
+# Filter rows with significant differences (e.g., p < 0.05)
+significant_rows_Lono_ <- DQO_Phosphorylation_Data %>% filter(p_value_Lono_ < 0.05)
+
+#ERRORS BELOW HERE WHERE NAS APPEARING IN ROWS
+#####Hours: Monday 8:30 - 10:30pm
+#####Hours: Tuesday 1:30 - 5:30pm
+
+# Sorting rows by biggest difference between Lono values and non-Lono values
+calculate_difference_ <- function(row) {
+  lono_ <- as.numeric(row[cols_Lono_])
+  notLono_ <- as.numeric(row[cols_NotLono_])
+  
+  # Remove NA values if present
+  lono_ <- lono_[!is.na(lono_)]
+  notLono_ <- notLono_[!is.na(notLono_)]
+  
+  if (length(lono_) < 1 || length(notLono_) < 1) return(NA)
+  
+  # Calculate the absolute differences between each corresponding value in group1 and group2
+  differences_ <- abs(mean(lono_) - mean(notLono_))  # Mean difference or sum of abs differences can be used
+  
+  return(differences_)
+}
+significant_rows_Lono_$mean_difference_ <- apply(significant_rows_Lono_, 1, calculate_difference_)
+significant_rows_Lono_sorted_ <- significant_rows_Lono_[order(-significant_rows_Lono_$mean_difference_), ]
+
+# View the sorted dataframe
+head(significant_rows_Lono_sorted_)
+
+# Export the significant_rows dataframe to an Excel file
+install.packages("writexl")
+library(writexl)
+write_xlsx(significant_rows_Lono_sorted_, "significant_rows_Lono_.xlsx") #in Desktop saved as "DQO Significantly Different Lono Phosphorylation Data"
+```
+
+##Thesis Venn Diagrams
+```{r}
+install.packages("VennDiagram")
+
+library(VennDiagram)
+library(grid)
+library(gridExtra)
+
+# Calculate scale factor (based on square root of area1 ratio)
+scale_factor <- sqrt(8 / 17)
+
+# --- Draw big Venn diagram ---
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(1, 2)))  # 2 columns for side-by-side
+
+pushViewport(viewport(layout.pos.col = 1))  # Left panel
+draw.pairwise.venn(
+  area1 = 17,
+  area2 = 169,
+  cross.area = 5,
+  category = c("Control", "Preconditioning"),
+  fill = c("#4FAFFF", "#0059B2"), #0055FF #0033CC
+  lty = "solid",
+  lwd = 0.5,
+  cex = 1,
+  cat.cex = 1,
+  cat.pos = c(180, 180),
+  cat.fontface = "bold",
+  cat.fontfamily = "Arial",
+  ext.text = FALSE
+)
+upViewport()
+
+#Upregulation Plot
+#venn1 <- draw.pairwise.venn(
+#  area1 = 17,         # Total in Set A
+#  area2 = 169,          # Total in Set B
+#  cross.area = 5,     # Overlap between A and B
+#  category = c("Control", "Preconditioning"),
+#  fill = c("#4FAFFF", "#0059B2"),
+#  lty = "solid",
+#  lwd = 0.5,
+#  cex = 1,
+#  cat.cex = 1,
+#  cat.pos = c(180, 180),
+#  cat.fontface = "bold",
+#  cat.fontfamily = "Arial",
+#  ext.text = FALSE
+#)
+#grid.draw(venn.plot)
+
+# --- Draw small Venn diagram, scaled down ---
+pushViewport(viewport(layout.pos.col = 2))
+pushViewport(viewport(width = unit(scale_factor, "npc"),
+                      height = unit(scale_factor, "npc"),
+                      just = c("center", "center")))
+
+draw.pairwise.venn(
+  area1 = 8,
+  area2 = 38,
+  cross.area = 1,
+  category = c("Control", "Preconditioning"),
+  fill = c("#4FAFFF", "#0059B2"), #0055FF #0033CC
+  lty = "solid",
+  lwd = 0.5,
+  cex = 1,
+  cat.cex = 1,
+  cat.pos = c(180, 180),
+  cat.fontface = "bold",
+  cat.fontfamily = "Arial",
+  ext.text = FALSE
+)
+upViewport(2)  # Return to top level
+
+#Downregulation Plot
+#venn2 <- draw.pairwise.venn(
+#  area1 = 8,         # Total in Set A
+#  area2 = 38,          # Total in Set B
+#  cross.area = 1,     # Overlap between A and B
+#  category = c("Control", "Preconditioning"),
+#  fill = c("#4FAFFF", "#0059B2"),
+#  lty = "solid",
+#  lwd = 0.5,
+#  cex = 1,
+#  cat.cex = 1,
+#  cat.pos = c(180, 180),
+#  cat.fontface = "bold",
+#  cat.fontfamily = "Arial",
+#  ext.text = FALSE,
+#  scaled = FALSE
+#)
+#grid.draw(venn.plot)
+```
+
+##Thesis SAA1 Graph
+```{r}
+library(ggplot2)
+
+# Create a data frame
+df <- data.frame(
+  x = c(76, 86, 94, 101, 76, 86, 94, 101, 52, 76, 101, 113, 129, 52, 119),
+  y = c(0.99, 1.015, 1.04, 1.407, 4.635, 10.675, 5.083, 11.208, 0, 0, 0, 0, 0, 0, 0),
+  group = c("Control", "Control", "Control", "Control", "Preconditioning", "Preconditioning", "Preconditioning", "Preconditioning", "Human", "Human", "Human", "Human", "Human", "Mouse", "Mouse")
+)
+
+# Convert 'group' to a factor for easier mapping
+df$group <- factor(df$group, levels = c("Control", "Preconditioning", "Human", "Mouse"))
+
+print(levels(df$group))
+
+# Scatterplot with color by group
+ggplot(df, aes(x = x, y = y, color = group, shape = group)) +
+  geom_point(size = 4) +
+  geom_segment(aes(x = 1, xend = 129, y = 0, yend = 0), color = "black") +  # adds a line at y = 0
+  geom_segment(aes(x = 1, xend = 1, y = 0, yend = 12), color = "black") +  # moves the y-axis to x = 1
+  geom_segment(data = data.frame(x = seq(1, 129, by = 8)),
+               aes(x = x, xend = x, y = 0, yend = -0.2),  # short tick lines
+               inherit.aes = FALSE, color = "black") +
+  geom_segment(data = data.frame(y = seq(0, 12, by = 3)),
+             aes(x = -0.5, xend = 1, y = y, yend = y),  # short horizontal tick lines
+             inherit.aes = FALSE, color = "black") +
+  geom_text(data = data.frame(x = seq(1, 129, by = 8)),
+            aes(x = x, y = -0.3, label = x),
+            inherit.aes = FALSE, size = 3, vjust = 1, family = "Arial") +
+  geom_text(data = data.frame(y = seq(0, 12, by = 3)),
+          aes(x = -1, y = y, label = y),
+          inherit.aes = FALSE, hjust = 1, size = 3, family = "Arial") +
+  scale_x_continuous(limits = c(-2, 129),
+                     breaks = seq(1, 129, by = 8)) +  # Set x-axis breaks every 9 units
+  scale_y_continuous(limits = c(-1, 12),
+                     breaks = seq(0, 12, by = 3)) +
+  scale_color_manual(values = c("Control" = "#4FAFFF", 
+                                "Preconditioning" = "#0059B2", 
+                                "Human" = "black", 
+                                "Mouse" = "black")) +
+  scale_shape_manual(values = c("Control" = 16, 
+                                "Preconditioning" = 15, 
+                                "Human" = 4, 
+                                "Mouse" = 5)) +
+  labs(title = "Serum Amyloid A1",
+       x = "Residue Position",
+       y = "Phosphorylation Fold Change",
+       color = "",
+       shape = "") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),  # Center the title
+    panel.grid = element_blank(),       # remove all gridlines
+    axis.ticks = element_blank(),       # remove axis ticks
+    axis.line = element_blank(),        # remove axis lines
+    axis.text = element_blank(),         # remove tick labels
+    axis.title.x = element_text(margin = margin(t = -10)),
+    axis.title.y = element_text(margin = margin(t = -25)),
+    legend.position = "bottom"
+  )
+```
+
+##Thesis Phosphosites Scatterplot Graph
+#Upregulation Scatterplot
+```{r}
+library(ggplot2)
+
+# Create a data frame
+df <- data.frame(
+  x = c("SLC16A1", "SLC16A1", "HBA", "HBA", "SAA1", "SAA1", "SPTB", "SPTB", " SLC16A1", " SLC16A1", " SAA1", " SAA1", "IGFBP3", "IGFBP3", "ANK1", "ANK1", " HBA", " HBA", "FGA", "FGA", "PA2G4", "PA2G4", "NAP1L4", "NAP1L4", "EPS15", "EPS15", "TSC22D4", "TSC22D4", " SPTB", " SPTB", " ANK1", " ANK1", " TSC22D4", " TSC22D4", " FGA", " FGA", "MYH10", "MYH10", "MYL4", "MYL4", "  HBA", "  HBA", "CFL1", "CFL1", " EPS15", " EPS15", "   HBA", "   HBA", "CLINT1", "CLINT1", "EPB41", "EPB41", "PRSS1", "PRSS1", "  EPS15", "  EPS15"),
+  y = c(7.42938731, 0.62984009, 3.69622316, 0.36960694, 3.30785619, 0, 3.14069742, 0.56508183, 3.10620008, 0.51804794, 3.02813215, 16.3459269, 2.90793876, 0.23961012, 2.76107843, 0, 2.75468129, 1.81760526, 2.68643042, 0.75210154, 2.53002739, 0.32070362, 2.51555905, 0.32679964, 2.41818765, 0.18630192, 2.35404536, 0.25615893, 2.25341681, 0.13156614, 2.25329204, 0, 2.225437, 0.25368351, 2.21226777, 0.63376415, 2.20221013, 2.69347034, 2.13689806, 2.11664257, 2.12588342, 0.20891641, 2.11142403, 0.27770223, 2.07629022, 0.36575316, 2.07560252, 0.19207045, 2.07221873, 0.81491012, 2.06438586, 1.3370225, 2.06406801, 1.06419905, 2.02541472, 0.84647281),
+  group = c("Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning")
+)
+
+# Convert 'group' to a factor for easier mapping
+df$group <- factor(df$group, levels = c("Control", "Preconditioning"))
+
+df$x <- factor(df$x, levels = c("SLC16A1", "HBA", "SAA1", "SPTB", " SLC16A1", " SAA1", "IGFBP3", "ANK1", " HBA", "FGA", "PA2G4", "NAP1L4", "EPS15", "TSC22D4", " SPTB", " ANK1", " TSC22D4", " FGA", "MYH10", "MYL4", "  HBA", "CFL1", " EPS15", "   HBA", "CLINT1", "EPB41", "PRSS1", "  EPS15"))
+
+tick_data <- data.frame(
+  x = c("SLC16A1", "SLC16A1", "HBA", "HBA", "SAA1", "SAA1", "SPTB", "SPTB", " SLC16A1", " SLC16A1", " SAA1", " SAA1", "IGFBP3", "IGFBP3", "ANK1", "ANK1", " HBA", " HBA", "FGA", "FGA", "PA2G4", "PA2G4", "NAP1L4", "NAP1L4", "EPS15", "EPS15", "TSC22D4", "TSC22D4", " SPTB", " SPTB", " ANK1", " ANK1", " TSC22D4", " TSC22D4", " FGA", " FGA", "MYH10", "MYH10", "MYL4", "MYL4", "  HBA", "  HBA", "CFL1", "CFL1", " EPS15", " EPS15", "   HBA", "   HBA", "CLINT1", "CLINT1", "EPB41", "EPB41", "PRSS1", "PRSS1", "  EPS15", "  EPS15"),  # your x-axis category labels
+  y = 0,
+  yend = -0.2
+)
+
+# Scatterplot with color by group
+ggplot(df, aes(x = x, y = y, color = group, shape = group)) +
+  geom_point(size = 3) +
+  geom_segment(aes(x = 0, xend = "  EPS15", y = 0, yend = 0), color = "black") +  # adds a line at y = 0
+  geom_segment(aes(x = 0, xend = 0, y = 0, yend = 17), color = "black") +  # moves the y-axis to x = 1
+  geom_segment(data = tick_data,
+               aes(x = x, xend = x, y = 0, yend = -0.4),
+               inherit.aes = FALSE,
+               color = "black") +
+  geom_segment(data = data.frame(y = seq(0, 16, by = 4)),
+             aes(x = -0.4, xend = 0, y = y, yend = y),  # short horizontal tick lines
+             inherit.aes = FALSE, color = "black") +
+  geom_text(data = data.frame(x = c("SLC16A1", "HBA", "SAA1", "SPTB", " SLC16A1", " SAA1", "IGFBP3", "ANK1", " HBA", "FGA", "PA2G4", "NAP1L4", "EPS15", "TSC22D4", " SPTB", " ANK1", " TSC22D4", " FGA", "MYH10", "MYL4", "  HBA", "CFL1", " EPS15", "   HBA", "CLINT1", "EPB41", "PRSS1", "  EPS15")),
+          aes(x = x, y = -0.6, label = x),
+          inherit.aes = FALSE,
+          size = 3, vjust = 1, family = "Arial", angle = 90, hjust = 1) +
+  geom_text(data = data.frame(y = seq(0, 16, by = 4)),
+          aes(x = -0.75, y = y, label = y),
+          inherit.aes = FALSE, hjust = 1, size = 3, family = "Arial") +
+  #scale_x_continuous(limits = c(-2, 129),
+  #                   breaks = seq(1, 129, by = 8)) +  # Set x-axis breaks every 9 units
+  #scale_y_continuous(limits = c(-1, 12),
+  #                   breaks = seq(0, 12, by = 3)) +
+  scale_x_discrete(expand = expansion(mult = c(0.12, 0.05))) +
+  scale_y_discrete(expand = expansion(mult = c(0.25, 0.05))) +
+  scale_color_manual(values = c("Control" = "#4FAFFF", 
+                                "Preconditioning" = "#0059B2")) +
+  scale_shape_manual(values = c("Control" = 16, 
+                                "Preconditioning" = 15)) +
+  labs(title = "Upregulated Control Phosphosites",
+       x = "Phosphosite",
+       y = "Phosphorylation Fold Change",
+       color = "",
+       shape = "") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),  # Center the title
+    panel.grid = element_blank(),       # remove all gridlines
+    axis.ticks = element_blank(),       # remove axis ticks
+    axis.line = element_blank(),        # remove axis lines
+    axis.text = element_blank(),         # remove tick labels
+    legend.position = "bottom"
+  )
+```
+
+#Downregulation Scatterplot
+```{r}
+library(ggplot2)
+
+# Create a data frame
+df <- data.frame(
+  x = c("SAA1", "SAA1", "PAK2", "PAK2", "TOM1L1", "TOM1L1", "DNAJA4", "DNAJA4", "ZYX", "ZYX", "BASP1", "BASP1", "CALD1", "CALD1", "HBB", "HBB", " CALD1", " CALD1"),
+  y = c(0.38057582, 0, 0.40194081, 2.31296024, 0.45588263, 1.66919687, 0.46005947, 1.10872561, 0.46157609, 0.88343128, 0.46424218, 1.76142088, 0.47385638, 1.00421085, 0.48461013, 0.64952936, 0.49079909, 0.75805743),
+  group = c("Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning", "Control", "Preconditioning")
+)
+
+# Convert 'group' to a factor for easier mapping
+df$group <- factor(df$group, levels = c("Control", "Preconditioning"))
+
+df$x <- factor(df$x, levels = c("SAA1", "PAK2", "TOM1L1", "DNAJA4", "ZYX", "BASP1", "CALD1", "HBB", " CALD1"))
+
+tick_data <- data.frame(
+  x = c("SAA1", "SAA1", "PAK2", "PAK2", "TOM1L1", "TOM1L1", "DNAJA4", "DNAJA4", "ZYX", "ZYX", "BASP1", "BASP1", "CALD1", "CALD1", "HBB", "HBB", " CALD1", " CALD1"),  # your x-axis category labels
+  y = 0,
+  yend = -0.2
+)
+
+# Scatterplot with color by group
+ggplot(df, aes(x = x, y = y, color = group, shape = group)) +
+  geom_point(size = 3) +
+  geom_segment(aes(x = 0, xend = " CALD1", y = 0, yend = 0), color = "black") +  # adds a line at y = 0
+  geom_segment(aes(x = 0, xend = 0, y = 0, yend = 3), color = "black") +  # moves the y-axis to x = 1
+  geom_segment(data = tick_data,
+               aes(x = x, xend = x, y = 0, yend = -0.1),
+               inherit.aes = FALSE,
+               color = "black") +
+  geom_segment(data = data.frame(y = seq(0, 3, by = 1)),
+             aes(x = -0.1, xend = 0, y = y, yend = y),  # short horizontal tick lines
+             inherit.aes = FALSE, color = "black") +
+  geom_text(data = data.frame(x = c("SAA1", "PAK2", "TOM1L1", "DNAJA4", "ZYX", "BASP1", "CALD1", "HBB", " CALD1")),
+          aes(x = x, y = -0.15, label = x),
+          inherit.aes = FALSE,
+          size = 3, vjust = 1, family = "Arial", angle = 90, hjust = 1) +
+  geom_text(data = data.frame(y = seq(0, 3, by = 1)),
+          aes(x = -0.15, y = y, label = y),
+          inherit.aes = FALSE, hjust = 1, size = 3, family = "Arial") +
+  #scale_x_continuous(limits = c(-2, 129),
+  #                   breaks = seq(1, 129, by = 8)) +  # Set x-axis breaks every 9 units
+  #scale_y_continuous(limits = c(-1, 12),
+  #                   breaks = seq(0, 12, by = 3)) +
+  scale_x_discrete(expand = expansion(mult = c(0.2, 0.05))) +
+  scale_y_discrete(expand = expansion(mult = c(0.25, 0.05))) +
+  scale_color_manual(values = c("Control" = "#4FAFFF", 
+                                "Preconditioning" = "#0059B2")) +
+  scale_shape_manual(values = c("Control" = 16, 
+                                "Preconditioning" = 15)) +
+  labs(title = "Downregulated Control Phosphosites",
+       x = "Phosphosite",
+       y = "Phosphorylation Fold Change",
+       color = "",
+       shape = "") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),  # Center the title
+    panel.grid = element_blank(),       # remove all gridlines
+    axis.ticks = element_blank(),       # remove axis ticks
+    axis.line = element_blank(),        # remove axis lines
+    axis.text = element_blank(),         # remove tick labels
+    legend.position = "bottom"
+  )
+```
+
+##Thesis Abundance Venn Diagrams
+```{r}
+install.packages("VennDiagram")
+
+library(VennDiagram)
+library(grid)
+library(gridExtra)
+
+# Calculate scale factor (based on square root of area1 ratio)
+scale_factor <- sqrt(13 / 23)
+scale_factor1 <- sqrt(12 / 23)
+scale_factor2 <- sqrt(19 / 23)
+
+# --- Set up 2x2 grid ---
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(2, 2)))  # 2 columns for side-by-side
+
+pushViewport(viewport(layout.pos.row = 1, layout.pos.col = 1))  # Left panel
+pushViewport(viewport(width = unit(scale_factor, "npc"),
+                      height = unit(scale_factor, "npc"),
+                      just = c("center", "center")))
+draw.pairwise.venn(
+  area1 = 13.001,
+  area2 = 17.001,
+  cross.area = 0.001,
+  category = c("Phosphorylation", "Abundance"),
+  fill = c("#4FAFFF", "#E5E5E5"), #0059B2
+  lty = "solid",
+  lwd = 0.5,
+  cex = 0.5,
+  cat.cex = 0.5,
+  cat.pos = c(0, 0),
+  cat.dist = c(0.09, 0.09),
+  cat.fontfamily = "Arial",
+  ext.text = FALSE,
+  label.col = c("black", NA, "black")  # Hide the middle/intersection label
+)
+upViewport(2)
+
+# --- Draw small Venn diagram, scaled down ---
+pushViewport(viewport(layout.pos.row = 1, layout.pos.col = 2))
+pushViewport(viewport(width = unit(scale_factor1, "npc"),
+                      height = unit(scale_factor1, "npc"),
+                      just = c("center", "center")))
+
+draw.pairwise.venn(
+  area1 = 12.001,
+  area2 = 18.001,
+  cross.area = 0.001,
+  category = c("Phosphorylation", "Abundance"),
+  fill = c("#4FAFFF", "#E5E5E5"), #0059B2
+  lty = "solid",
+  lwd = 0.5,
+  cex = 0.5,
+  cat.cex = 0.5,
+  cat.pos = c(0, 0),
+  cat.dist = c(0.06, 0.06),
+  cat.fontfamily = "Arial",
+  ext.text = FALSE,
+  label.col = c("black", NA, "black")  # Hide the middle/intersection label
+)
+upViewport(2)
+
+# --- Draw 3rd Venn diagram, scaled down ---
+pushViewport(viewport(layout.pos.row = 2, layout.pos.col = 1))
+pushViewport(viewport(width = unit(1, "npc"),
+                      height = unit(1, "npc"),
+                      just = c("center", "center")))
+draw.pairwise.venn(
+  area1 = 23.001,
+  area2 = 169.001,
+  cross.area = 0.001,
+  category = c("Phosphorylation", "Abundance"),
+  fill = c("#0059B2", "#E5E5E5"), #0059B2
+  lty = "solid",
+  lwd = 0.5,
+  cex = 0.5,
+  cat.cex = 0.5,
+  cat.pos = c(0, 0),
+  cat.fontfamily = "Arial",
+  ext.text = FALSE,
+  label.col = c("black", NA, "black")  # Hide the middle/intersection label
+)
+upViewport(2)  # Return to top level
+
+# --- Draw 4th Venn diagram, scaled down ---
+pushViewport(viewport(layout.pos.row = 2, layout.pos.col = 2))
+pushViewport(viewport(width = unit(scale_factor2, "npc"),
+                      height = unit(scale_factor2, "npc"),
+                      just = c("center", "center")))
+
+draw.pairwise.venn(
+  area1 = 19.001,
+  area2 = 38.001,
+  cross.area = 0.001,
+  category = c("Phosphorylation", "Abundance"),
+  fill = c("#0059B2", "#E5E5E5"), #0059B2
+  lty = "solid",
+  lwd = 0.5,
+  cex = 0.5,
+  cat.cex = 0.5,
+  cat.pos = c(0, 0),
+  cat.dist = c(0.05, 0.05),
+  cat.fontfamily = "Arial",
+  ext.text = FALSE,
+  label.col = c("black", NA, "black")  # Hide the middle/intersection label
+)
+upViewport(2)  # Return to top level
+```
+
+##Thesis Abundance Scatterplots
+#Control Upregulated
+```{r}
+#install.packages("ggpmisc")
+
+library(ggplot2)
+library(ggpmisc)
+
+# Create a data frame
+df <- data.frame(
+  x = c(7.42938731, 3.69622316, 3.30785619, 3.14069742, 3.10620008, 3.02813215, 2.90793876, 2.76107843, 2.75468129, 2.68643042, 2.53002739, 2.51555905, 2.41818765, 2.35404536, 2.25341681, 2.25329204, 2.225437, 2.21226777, 2.20221013, 2.13689806, 2.12588342, 2.11142403, 2.07629022, 2.07560252, 2.07221873, 2.06438586, 2.06406801, 2.02541472),
+  y = c(1.023256, 0.985171, 1, 0.992314, 1.023256, 1, 0.966102, 0.995614, 0.985171, 0.988466, 0.823529, 1, 0.98, 0.93617, 0.992314, 0.995614, 0.93617, 0.988466, 0.989286, 0.963636, 0.985171, 0.983471, 0.98, 0.985171, 0.842105, 1, 0.993695, 0.98),
+  group = c("Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control")
+)
+
+# Convert 'group' to a factor for easier mapping
+df$group <- factor(df$group, levels = c("Control"))
+
+# Scatterplot with color by group
+ggplot(df, aes(x = x, y = y, color = group, shape = group)) +
+  geom_point(size = 2) +
+  geom_segment(aes(x = 0, xend = 8, y = 0, yend = 0), color = "black") +  # adds a line at y = 0
+  geom_segment(aes(x = 0, xend = 0, y = 0, yend = 2), color = "black") +  # moves the y-axis to x = 1
+  geom_segment(data = data.frame(x = seq(0, 8, by = 2)),
+               aes(x = x, xend = x, y = 0, yend = -0.05),  # short tick lines
+               inherit.aes = FALSE, color = "black") +
+  geom_segment(data = data.frame(y = seq(0, 2, by = 0.5)),
+             aes(x = -0.2, xend = 0, y = y, yend = y),  # short horizontal tick lines
+             inherit.aes = FALSE, color = "black") +
+  geom_text(data = data.frame(x = seq(0, 8, by = 2)),
+            aes(x = x, y = -0.1, label = x),
+            inherit.aes = FALSE, size = 3, vjust = 1, family = "Arial") +
+  geom_text(data = data.frame(y = seq(0, 2, by = 0.5)),
+          aes(x = -0.3, y = y, label = y),
+          inherit.aes = FALSE, hjust = 1, size = 3, family = "Arial") +
+  geom_smooth(method = "lm", se = FALSE, color = "black", size = 0.5) +
+  annotate(
+    "text",
+    x = 6.5, y = 1.8,             # <-- Adjust these manually based on your data
+    label = "italic(R)^2 == 0.07774",
+    parse = TRUE,
+    color = "black",
+    size = 3) +
+  #scale_x_continuous(limits = c(-2, 10),
+  #                   breaks = seq(0, 8, by = 2)) +  # Set x-axis breaks every 9 units
+  #scale_y_continuous(limits = c(-1, 2),
+  #                   breaks = seq(0, 2, by = 0.5)) +
+  scale_color_manual(values = c("Control" = "#4FAFFF")) +
+  scale_shape_manual(values = c("Control" = 16)) +
+  labs(x = "Phosphorylation Fold Change",
+       y = "Protein Abundance Fold Change",
+       color = "",
+       shape = "") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),  # Center the title
+    panel.grid = element_blank(),       # remove all gridlines
+    axis.ticks = element_blank(),       # remove axis ticks
+    axis.line = element_blank(),        # remove axis lines
+    axis.text = element_blank(),         # remove tick labels
+    #axis.title.x = element_text(margin = margin(t = -10)),
+    #axis.title.y = element_text(margin = margin(t = -25)),
+    legend.position = "bottom"
+  )
+```
+
+#Control Downregulated
+```{r}
+#install.packages("ggpmisc")
+
+library(ggplot2)
+library(ggpmisc)
+
+# Create a data frame
+df <- data.frame(
+  x = c(0.38057582, 0.40194081, 0.46005947, 0.46157609, 0.46424218, 0.47385638, 0.48461013, 0.49079909),
+  y = c(1, 0.980392, 1, 1.015873, 0.875, 1.031579, 0.984688, 1.031579),
+  group = c("Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control"))
+
+# Convert 'group' to a factor for easier mapping
+df$group <- factor(df$group, levels = c("Control"))
+
+# Scatterplot with color by group
+ggplot(df, aes(x = x, y = y, color = group, shape = group)) +
+  geom_point(size = 2) +
+  geom_segment(aes(x = 0, xend = 0.5, y = 0, yend = 0), color = "black") +  # adds a line at y = 0
+  geom_segment(aes(x = 0, xend = 0, y = 0, yend = 2), color = "black") +  # moves the y-axis to x = 1
+  geom_segment(data = data.frame(x = seq(0, 0.5, by = 0.1)),
+               aes(x = x, xend = x, y = 0, yend = -0.05),  # short tick lines
+               inherit.aes = FALSE, color = "black") +
+  geom_segment(data = data.frame(y = seq(0, 2, by = 0.5)),
+             aes(x = -0.015, xend = 0, y = y, yend = y),  # short horizontal tick lines
+             inherit.aes = FALSE, color = "black") +
+  geom_text(data = data.frame(x = seq(0, 0.5, by = 0.1)),
+            aes(x = x, y = -0.1, label = x),
+            inherit.aes = FALSE, size = 3, vjust = 1, family = "Arial") +
+  geom_text(data = data.frame(y = seq(0, 2, by = 0.5)),
+          aes(x = -0.02, y = y, label = y),
+          inherit.aes = FALSE, hjust = 1, size = 3, family = "Arial") +
+  geom_smooth(method = "lm", se = FALSE, color = "black", size = 0.5) +
+  annotate(
+    "text",
+    x = 0.4, y = 1.8,             # <-- Adjust these manually based on your data
+    label = "italic(R)^2 == 0.005543",
+    parse = TRUE,
+    color = "black",
+    size = 3) +
+  #scale_x_continuous(limits = c(-2, 10),
+  #                   breaks = seq(0, 8, by = 2)) +  # Set x-axis breaks every 9 units
+  #scale_y_continuous(limits = c(-1, 2),
+  #                   breaks = seq(0, 2, by = 0.5)) +
+  scale_color_manual(values = c("Control" = "#4FAFFF")) +
+  scale_shape_manual(values = c("Control" = 16)) +
+  labs(x = "Phosphorylation Fold Change",
+       y = "Protein Abundance Fold Change",
+       color = "",
+       shape = "") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),  # Center the title
+    panel.grid = element_blank(),       # remove all gridlines
+    axis.ticks = element_blank(),       # remove axis ticks
+    axis.line = element_blank(),        # remove axis lines
+    axis.text = element_blank(),         # remove tick labels
+    #axis.title.x = element_text(margin = margin(t = -10)),
+    #axis.title.y = element_text(margin = margin(t = -25)),
+    legend.position = "bottom"
+  )
+```
+
+#Preconditioning Upregulated
+```{r}
+#install.packages("ggpmisc")
+
+library(ggplot2)
+library(ggpmisc)
+
+# Create a data frame
+df <- data.frame(
+  x = c(18.5967159, 16.7150515, 16.3459269, 10.710667, 10.1572067, 10.1348594, 7.94080191, 7.56060843, 6.69107234, 5.94366214, 5.70178727, 5.56302898, 5.32404647, 5.24301149, 5.05927489, 4.62545444, 4.25388858, 4.20924069, 3.77473887, 3.41305926, 3.36579152, 3.20495703, 3.16429037, 3.05986237, 3.02427112, 2.90977606, 2.90632634, 2.8559226, 2.81584955, 2.74978313, 2.74927546, 2.74115201, 2.70223005, 2.69347034, 2.67485879, 2.65775488, 2.64148402, 2.634041, 2.62896998, 2.61249843, 2.59751202, 2.58316295, 2.58315838, 2.57740708, 2.50933525, 2.50749474, 2.49976957, 2.49866888, 2.49741802, 2.49253404, 2.49131606, 2.48236687, 2.47488421, 2.46132277, 2.44660881, 2.43777099, 2.43564605, 2.43209636, 2.43136613, 2.40717111, 2.39593722, 2.38225401, 2.38033055, 2.36840258, 2.36274811, 2.35612029, 2.34757856, 2.32309107, 2.32098585, 2.31445986, 2.31296024, 2.30435771, 2.29540032, 2.28095367, 2.27192412, 2.26615973, 2.26572035, 2.2549461, 2.2500197, 2.24062436, 2.23564712, 2.23470921, 2.20313265, 2.19809085, 2.1974391, 2.18718199, 2.17666522, 2.16940519, 2.16919717, 2.16291889, 2.14494634, 2.14142126, 2.137413, 2.13735623, 2.12519967, 2.12007687, 2.11664257, 2.11516053, 2.11391589, 2.11202726, 2.1024141, 2.09854956, 2.08534491, 2.08527426, 2.0848936, 2.08330156, 2.07547169, 2.0739278, 2.07010777, 2.05919193, 2.04919677, 2.04901929, 2.04830575, 2.04829498, 2.04250326, 2.03956244, 2.03825815, 2.03471899, 2.03297128, 2.03293885, 2.03100317, 2.02821745, 2.02589779, 2.02210107, 2.02078217, 2.01743467, 2.01533742, 2.01485805, 2.01163008, 2.01082548, 2.0089481),
+  y = c(1.380952, 1.566667, 1.380952, 1.412229, 1.380952, 1.566667, 1.380952, 0.833333, 1.380952, 1.412229, 1.412229, 1.117647, 1.566667, 1.566667, 1.380952, 1.566667, 1.412229, 1.380952, 1.412229, 1.117647, 0.974359, 1.117647, 1.412229, 1.104762, 1.117647, 0.761905, 1.244444, 1, 0.8, 1.019608, 1.412229, 1.079365, 0.761905, 1.412229, 1.104762, 1.117647, 1.412229, 1, 0, 1.052632, 1.212121, 0.966667, 1.037645, 1.045045, 0.989247, 1.079365, 1.044057, 1.007092, 1.117647, 1.041667, 0.983165, 1, 1.412229, 1.117647, 0.985008, 0.666667, 1.006289, 1, 1, 1.006289, 1.079365, 1.412229, 0.952381, 2, 1, 1.005682, 1.130435, 1, 0.955556, 1.055556, 0.952381, 1.122807, 1.333333, 1.005682, 1.019608, 1.049479, 1, 1.044057, 0.952381, 1, 0.933333, 0.982456, 1.333333, 1.045045, 1.055556, 1.047619, 1.117647, 1.666667, 0.761905, 1.122807, 1.333333, 1.066667, 0.952381, 1.005682, 1.006536, 1.037037, 1.128205, 1, 1.005682, 1.212121, 1, 1.111111, 1.212121, 1.333333, 0.998723, 1.047619, 1.244444, 0.8, 1.566667, 0.99115, 1.076923, 1.130435, 0.8, 0.952381, 0.982456, 1, 1.005682, 1.117647, 1.333333, 1.005682, 1, 0.761905, 1.226667, 1.051282, 1.333333, 0.96124, 1.08642, 1.130435, 0.761905, 1, 1.066667),
+  group = c("Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control")
+)
+
+# Convert 'group' to a factor for easier mapping
+df$group <- factor(df$group, levels = c("Control"))
+
+# Scatterplot with color by group
+ggplot(df, aes(x = x, y = y, color = group, shape = group)) +
+  geom_point(size = 2) +
+  geom_segment(aes(x = 0, xend = 20, y = 0, yend = 0), color = "black") +  # adds a line at y = 0
+  geom_segment(aes(x = 0, xend = 0, y = 0, yend = 2), color = "black") +  # moves the y-axis to x = 1
+  geom_segment(data = data.frame(x = seq(0, 20, by = 4)),
+               aes(x = x, xend = x, y = 0, yend = -0.05),  # short tick lines
+               inherit.aes = FALSE, color = "black") +
+  geom_segment(data = data.frame(y = seq(0, 2, by = 0.5)),
+             aes(x = -0.2, xend = 0, y = y, yend = y),  # short horizontal tick lines
+             inherit.aes = FALSE, color = "black") +
+  geom_text(data = data.frame(x = seq(0, 20, by = 4)),
+            aes(x = x, y = -0.1, label = x),
+            inherit.aes = FALSE, size = 3, vjust = 1, family = "Arial") +
+  geom_text(data = data.frame(y = seq(0, 2, by = 0.5)),
+          aes(x = -0.3, y = y, label = y),
+          inherit.aes = FALSE, hjust = 1, size = 3, family = "Arial") +
+  geom_smooth(method = "lm", se = FALSE, color = "black", size = 0.5) +
+  annotate(
+    "text",
+    x = 6.5, y = 1.8,             # <-- Adjust these manually based on your data
+    label = "italic(R)^2 == 0.1464",
+    parse = TRUE,
+    color = "black",
+    size = 3) +
+  #scale_x_continuous(limits = c(-2, 10),
+  #                   breaks = seq(0, 8, by = 2)) +  # Set x-axis breaks every 9 units
+  #scale_y_continuous(limits = c(-1, 2),
+  #                   breaks = seq(0, 2, by = 0.5)) +
+  scale_color_manual(values = c("Control" = "#0059B2")) +
+  scale_shape_manual(values = c("Control" = 15)) +
+  labs(x = "Phosphorylation Fold Change",
+       y = "Protein Abundance Fold Change",
+       color = "",
+       shape = "") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),  # Center the title
+    panel.grid = element_blank(),       # remove all gridlines
+    axis.ticks = element_blank(),       # remove axis ticks
+    axis.line = element_blank(),        # remove axis lines
+    axis.text = element_blank(),         # remove tick labels
+    #axis.title.x = element_text(margin = margin(t = -10)),
+    #axis.title.y = element_text(margin = margin(t = -25)),
+    legend.position = "bottom"
+  )
+```
+
+#Preconditioning Downregulated
+```{r}
+#install.packages("ggpmisc")
+
+library(ggplot2)
+library(ggpmisc)
+
+# Create a data frame
+df <- data.frame(
+  x = c(0.06101108, 0.13108949, 0.13156614, 0.15591981, 0.16372599, 0.16648762, 0.18630192, 0.19207045, 0.20891641, 0.21029231, 0.23487939, 0.2367399, 0.23774993, 0.23961012, 0.25049901, 0.25368351, 0.25615893, 0.27770223, 0.29912401, 0.32070362, 0.32404736, 0.32679964, 0.330186, 0.33310022, 0.34782921, 0.35811585, 0.36232138, 0.36234299, 0.36241781, 0.36575316, 0.36960694, 0.37126844, 0.38121568, 0.38772374, 0.39404199, 0.42894696, 0.4343351, 0.44585101, 0.46460766, 0.4704672, 0.47579299, 0.48625162, 0.49020639, 0.49393062, 0.49475707, 0.49478146, 0.49887844),
+  y = c(0.666667, 0.91954, 0.985008, 0.91954, 0.985008, 0.95405, 1.247312, 0.95405, 0.95405, 0.974359, 0.988201, 0.95405, 1.007092, 0.944444, 0.95405, 0.982456, 0.982456, 1.007092, 1.007092, 0.833333, 0.888889, 0.888889, 0.820513, 1.005682, 1, 0.981779, 1.005682, 0.95405, 0.888889, 1.247312, 0.95405, 1, 0.988201, 0.95405, 0.666667, 0.806202, 0.988201, 0.888889, 0.666667, 0.926554, 0.987342, 1, 1.005682, 1.052632, 0.806202, 0.974565, 0.926554),
+  group = c("Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control", "Control"))
+
+# Convert 'group' to a factor for easier mapping
+df$group <- factor(df$group, levels = c("Control"))
+
+# Scatterplot with color by group
+ggplot(df, aes(x = x, y = y, color = group, shape = group)) +
+  geom_point(size = 2) +
+  geom_segment(aes(x = 0, xend = 0.5, y = 0, yend = 0), color = "black") +  # adds a line at y = 0
+  geom_segment(aes(x = 0, xend = 0, y = 0, yend = 2), color = "black") +  # moves the y-axis to x = 1
+  geom_segment(data = data.frame(x = seq(0, 0.5, by = 0.1)),
+               aes(x = x, xend = x, y = 0, yend = -0.05),  # short tick lines
+               inherit.aes = FALSE, color = "black") +
+  geom_segment(data = data.frame(y = seq(0, 2, by = 0.5)),
+             aes(x = -0.015, xend = 0, y = y, yend = y),  # short horizontal tick lines
+             inherit.aes = FALSE, color = "black") +
+  geom_text(data = data.frame(x = seq(0, 0.5, by = 0.1)),
+            aes(x = x, y = -0.1, label = x),
+            inherit.aes = FALSE, size = 3, vjust = 1, family = "Arial") +
+  geom_text(data = data.frame(y = seq(0, 2, by = 0.5)),
+          aes(x = -0.02, y = y, label = y),
+          inherit.aes = FALSE, hjust = 1, size = 3, family = "Arial") +
+  geom_smooth(method = "lm", se = FALSE, color = "black", size = 0.5) +
+  annotate(
+    "text",
+    x = 0.4, y = 1.8,             # <-- Adjust these manually based on your data
+    label = "italic(R)^2 == 0.003486",
+    parse = TRUE,
+    color = "black",
+    size = 3) +
+  #scale_x_continuous(limits = c(-2, 10),
+  #                   breaks = seq(0, 8, by = 2)) +  # Set x-axis breaks every 9 units
+  #scale_y_continuous(limits = c(-1, 2),
+  #                   breaks = seq(0, 2, by = 0.5)) +
+  scale_color_manual(values = c("Control" = "#0059B2")) +
+  scale_shape_manual(values = c("Control" = 15)) +
+  labs(x = "Phosphorylation Fold Change",
+       y = "Protein Abundance Fold Change",
+       color = "",
+       shape = "") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5),  # Center the title
+    panel.grid = element_blank(),       # remove all gridlines
+    axis.ticks = element_blank(),       # remove axis ticks
+    axis.line = element_blank(),        # remove axis lines
+    axis.text = element_blank(),         # remove tick labels
+    #axis.title.x = element_text(margin = margin(t = -10)),
+    #axis.title.y = element_text(margin = margin(t = -25)),
+    legend.position = "bottom"
+  )
+```
+
+##Thesis Circle Packing Plot for Pathways
+#Control Pathways
+```{r}
+#install.packages("packcircles")
+#install.packages("ggforce")
+#install.packages("circlize")
+#install.packages("scales")
+
+library(packcircles)
+library(ggplot2)
+library(ggforce)
+library(dplyr)
+library(circlize)
+library(tidyr)
+library(scales)
+library(ggrepel)  # for handling text labels with automatic wrapping
+library(stringr)  # for wrapping text
+
+# Original data
+data <- data.frame(
+  parent = c("Inflammation", "Inflammation", "Innate Immunity", "Innate Immunity", "Innate Immunity", 
+             "Innate Immunity", "Innate Immunity", "Innate Immunity", "Migration", "Migration", 
+             "Migration", "Migration"),
+  label = c("regulation of inflammatory response", "inflammatory response", "platelet activation", 
+            "negative regulation of immune system process", "negative regulation of defense response", 
+            "negative regulation of response to external stimulus", 
+            "myeloid cell activation involved in immune response", "regulation of immune response", 
+            "regulation of actin cytoskeleton organization", "actin filament bundle assembly", 
+            "cell chemotaxis", "leukocyte migration"),
+  p_value = c(6.10E-04, 9.40E-04, 0.01, 0.01, 2.50E-03, 8.30E-03, 9.70E-03, 0.02, 0.02, 
+           3.40E-03, 5.80E-04, 4.60E-04),
+  size = c(6.10E-04, 9.40E-04, 0.01, 0.01, 2.50E-03, 8.30E-03, 9.70E-03, 0.02, 0.02, 
+              3.40E-03, 5.80E-04, 4.60E-04)
+)
+
+# Log scale and size rescaling
+data <- data %>%
+  mutate(
+    log_size = log(size + 1e-6),
+    scaled_size = rescale(log_size, to = c(1, 10))
+  )
+
+# Layout for each subgroup
+nested_layout <- data %>%
+  group_by(parent) %>%
+  do({
+    layout <- circleProgressiveLayout(.$scaled_size, sizetype = "area")
+    bind_cols(., layout)
+  }) %>%
+  ungroup()
+
+# Offset groups horizontally to prevent overlap
+nested_layout <- nested_layout %>%
+  mutate(parent_id = as.numeric(factor(parent)))
+
+group_spacing <- 15
+nested_layout <- nested_layout %>%
+  mutate(
+    x = x + parent_id * group_spacing,
+    y = y
+  )
+
+# --- NEW: Compute enclosing circles for each parent group ---
+parent_bounds <- nested_layout %>%
+  group_by(parent, parent_id) %>%
+  summarize(
+    center_x = mean(x),
+    center_y = mean(y),
+    group_radius = max(sqrt((x - mean(x))^2 + (y - mean(y))^2 + radius^2)) + 2,
+    .groups = "drop"
+  )
+
+# Step 7: Wrap child labels using str_wrap() from stringr
+nested_layout <- nested_layout %>%
+  mutate(label_wrapped = str_wrap(label, width = 30))  # Adjust width as needed
+
+# Plot nested + enclosing circles
+ggplot() +
+  # Group enclosing circles
+  ggforce::geom_circle(data = parent_bounds, 
+                       aes(x0 = center_x, y0 = center_y, r = (group_radius - 1)), 
+                       color = "black", fill = NA, linewidth = 0.5, linetype = "solid") +
+  # Child circles
+  ggforce::geom_circle(data = nested_layout,
+                       aes(x0 = x, y0 = y, r = 0.8, alpha = p_value),  # fixed radius
+                       fill = "#4FAFFF", color = "white", linewidth = 0.1) +
+  # Labels for child pathways
+  geom_text_repel(data = nested_layout,
+                  aes(x = x, y = y, label = label_wrapped), size = 2.5, max.overlaps = 10) +
+  # Parent labels
+  geom_text(data = parent_bounds,
+            aes(x = center_x, y = center_y + group_radius + 1, label = parent),
+            size = 4) +
+  # Custom legend with circles (using geom_point instead of geom_circle)
+  # Custom legend with circles (using geom_point instead of geom_circle)
+  #geom_point(data = nested_layout, 
+  #           aes(x = x, y = y, size = radius), 
+  #           shape = 16,  # solid circles in the legend
+  #           color = "#4FAFFF", 
+   #          alpha = 0.7, 
+  #           show.legend = TRUE) +  
+  # Customizing the legend to ensure size appears properly as circles
+  guides(p_value = guide_legend(
+    title = "p-value", 
+    override.aes = list(shape = 15, fill = "#4FAFFF", color = "#4FAFFF", size = 6)  # solid circle in legend
+  )) +
+  scale_alpha_continuous(
+  name = "p-value",
+  range = c(1, 0.3)  # low p = high opacity (dark); high p = low opacity (light)
+) +
+  coord_fixed() +
+  theme_void() +
+  theme(legend.position = "bottom")
+
+```
+
+#Preconditioning Pathways
+```{r}
+#install.packages("packcircles")
+#install.packages("ggforce")
+#install.packages("circlize")
+#install.packages("scales")
+
+library(packcircles)
+library(ggplot2)
+library(ggforce)
+library(dplyr)
+library(circlize)
+library(tidyr)
+library(scales)
+library(ggrepel)  # for handling text labels with automatic wrapping
+library(stringr)  # for wrapping text
+
+# Original data
+data <- data.frame(
+  parent = c("GPCR Signaling", "GPCR Signaling", "GPCR Signaling", "GPCR Signaling", "GPCR Signaling", 
+             "Coagulation", "Coagulation", "mRNA Processing", "mRNA Processing", "mRNA Processing", 
+             "mRNA Processing"),
+  label = c("positive regulation of response to stimulus", "G protein-coupled receptor signaling pathway", "GTPase regulator activity", "small GTPase-mediated signal transduction", "regulation of small GTPase mediated signal transduction", "negative regulation of coagulation", "regulation of blood coagulation", "mRNA processing", "RNA biosynthetic process", "RNA splicing", "regulation of RNA splicing"),
+  p_value = c(1.00E-03, 1.40E-04, 2.70E-04, 3.60E-05, 1.10E-05, 8.50E-05, 3.90E-04, 6.00E-04, 4.20E-05, 1.20E-04, 3.40E-04),
+  size = c(1.00E-03, 1.40E-04, 2.70E-04, 3.60E-05, 1.10E-05, 8.50E-05, 3.90E-04, 6.00E-04, 4.20E-05, 1.20E-04, 3.40E-04)
+)
+
+# Log scale and size rescaling
+data <- data %>%
+  mutate(
+    log_size = log(size + 1e-6),
+    scaled_size = rescale(log_size, to = c(1, 10))
+  )
+
+# Layout for each subgroup
+nested_layout <- data %>%
+  group_by(parent) %>%
+  do({
+    layout <- circleProgressiveLayout(.$scaled_size, sizetype = "area")
+    bind_cols(., layout)
+  }) %>%
+  ungroup()
+
+# Offset groups horizontally to prevent overlap
+nested_layout <- nested_layout %>%
+  mutate(parent_id = as.numeric(factor(parent)))
+
+group_spacing <- 15
+nested_layout <- nested_layout %>%
+  mutate(
+    x = x + parent_id * group_spacing,
+    y = y
+  )
+
+# --- NEW: Compute enclosing circles for each parent group ---
+parent_bounds <- nested_layout %>%
+  group_by(parent, parent_id) %>%
+  summarize(
+    center_x = mean(x),
+    center_y = mean(y),
+    group_radius = max(sqrt((x - mean(x))^2 + (y - mean(y))^2 + radius^2)) + 2,
+    .groups = "drop"
+  )
+
+# Step 7: Wrap child labels using str_wrap() from stringr
+nested_layout <- nested_layout %>%
+  mutate(label_wrapped = str_wrap(label, width = 30))  # Adjust width as needed
+
+# Plot nested + enclosing circles
+ggplot() +
+  # Group enclosing circles
+  ggforce::geom_circle(data = parent_bounds, 
+                       aes(x0 = center_x, y0 = center_y, r = (group_radius - 1)), 
+                       color = "black", fill = NA, linewidth = 0.5, linetype = "solid") +
+  # Child circles
+  ggforce::geom_circle(data = nested_layout,
+                       aes(x0 = x, y0 = y, r = 0.8, alpha = p_value),  # fixed radius
+                       fill = "#0059B2", color = "white", linewidth = 0.1) +
+  # Labels for child pathways
+  geom_text_repel(data = nested_layout,
+                  aes(x = x, y = y, label = label_wrapped), size = 2.5, max.overlaps = 10) +
+  # Parent labels
+  geom_text(data = parent_bounds,
+            aes(x = center_x, y = center_y + group_radius + 1, label = parent),
+            size = 4) +
+  # Custom legend with circles (using geom_point instead of geom_circle)
+  # Custom legend with circles (using geom_point instead of geom_circle)
+  #geom_point(data = nested_layout, 
+  #           aes(x = x, y = y, size = radius), 
+  #           shape = 16,  # solid circles in the legend
+  #           color = "#4FAFFF", 
+   #          alpha = 0.7, 
+  #           show.legend = TRUE) +  
+  # Customizing the legend to ensure size appears properly as circles
+  guides(p_value = guide_legend(
+    title = "p-value", 
+    override.aes = list(shape = 15, fill = "#0059B2", color = "#0059B2", size = 6)  # solid circle in legend
+  )) +
+  scale_alpha_continuous(
+  name = "p-value",
+  range = c(1, 0.3)  # low p = high opacity (dark); high p = low opacity (light)
+) +
+  coord_fixed() +
+  theme_void() +
+  theme(legend.position = "bottom")
+
+```
+
+#NO LONO Lollipop Graph
+```{r}
+BiocManager::install("org.Hs.eg.db", ask = FALSE)
+
+remotes::install_github("G3viz/g3viz")
+library(g3viz)
+
+phospho_data <- data.frame(
+  Hugo_Symbol = c("P69905", "P69905"),         # Use UniProt as gene symbol
+  AA_Position = c(3, 13),                      # Amino acid positions
+  Protein_Change = c("p.S3p", "p.T13p"),
+  Mutation_Class = c("Phospho", "Phospho"),
+  stringsAsFactors = FALSE
+)
+
+# Optional: define plot options if you want to customize colors or labels
+options <- g3Lollipop.options()
+options$colorSchema <- list(Phospho = "#FF5733")
+
+g3Lollipop(
+  mutation.dat = phospho_data,
+  gene.symbol = "HBA1",           # Gene name (HGNC symbol)
+#  uniprot.id = "P69905",          # UniProt ID if known
+  factor.col = "Mutation_Class",
+  plot.options = options,
+  output.filename = "phospho_plot"
+)
+
 ```
