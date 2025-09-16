@@ -15,12 +15,17 @@ library(tidyverse)
 library(readxl)
 library(stringr)
 library(dplyr)
+library(tidyr)
+library(ComplexHeatmap)
+library(RColorBrewer)
+library(circlize)
+
 
 # Set home for figures
-fig_path = "C:/Users/ashle/Dropbox/Ashley/Post-Doc/Projects/DQO preconditioning/figs"
+fig_path = "C:/Users/Ashley Blawas/Dropbox/Ashley/Post-Doc/Projects/DQO preconditioning/figs"
 
 ```
-
+# From working with original dataset...
 ```{r  include=FALSE}
 
 # Where does data live?
@@ -340,23 +345,1019 @@ cat(paste("File", filename, "has been saved.\n"))
 
 ```
 
-# Choose a gene to test
+## From working with corrected dataset...
 ```{r}
 
-phos_filtered %>% filter(Gene == "HBA") %>%
-  group_by(Animal, Condition) %>%
-  summarize(MaxValue = max(Value)) %>%
-  ungroup() %>%
-  ggplot(aes(x=Condition, y = MaxValue)) +
-  facet_wrap(vars(Animal), scales = "free") +
-  geom_point()
+df_abundance <- read_excel("C:/Users/Ashley Blawas/Dropbox/Ashley/Post-Doc/Projects/DQO preconditioning/data/combined_df.xlsx", 
+    sheet = "abundance")
+
+df_phospho <- read_excel("C:/Users/Ashley Blawas/Dropbox/Ashley/Post-Doc/Projects/DQO preconditioning/data/combined_df.xlsx", 
+    sheet = "phospho")
 
 ```
 
-# Look at change between time point A & C and C & D
+## Make ABUNDANCE data frame actually useful...
+```{r}
+# Reshape the abundance data
+df_abundance_long <- df_abundance %>%
+  pivot_longer(
+    cols = 3:32,  # Adjust this if needed
+    names_to = c("AnimalName", "Condition", ".value"),
+    names_sep = "_"
+  )
+
+# Rename the coumns
+df_abundance_long <- df_abundance_long  %>%
+  rename(
+    ProteinCode = PG.ProteinGroups,
+    ProteinName = PG.ProteinDescriptions.x
+  )
+
+```
+
+## Make PHOSPHO data frame actually useful...
+```{r}
+# Reshape the abundance data
+df_phospho <- df_phospho %>%
+  rename_with(~ gsub("^(PTM\\.|PG\\.)", "", .), 
+              .cols = starts_with("PTM.") | starts_with("PG.")) %>%
+  rename(
+    SiteLocation = SiteLocation.x,
+ProteinName = ProteinDescriptions.y)
+
+
+df_phospho_long <- df_phospho %>%
+  pivot_longer(
+    cols = 9:98,
+    names_to = "temp",
+    values_to = "Value"
+  ) %>%
+  # Separate the combined column name into 3 parts
+  mutate(
+    MeasurementType = case_when(
+      str_ends(temp, "Log2_Normalized_Phosphorylation") ~ "Log2NormalizedPhosphorylation",
+      str_ends(temp, "Normalized_Phosphorylation") ~ "NormalizedPhosphorylation",
+      str_ends(temp, "Phosphorylation") ~ "Phosphorylation",
+      TRUE ~ "Other"
+    ),
+    # Remove the measurement suffix to isolate AnimalName and Condition
+    temp_clean = case_when(
+      MeasurementType == "Log2NormalizedPhosphorylation" ~ str_remove(temp, "_Log2_Normalized_Phosphorylation"),
+      MeasurementType == "NormalizedPhosphorylation" ~ str_remove(temp, "_Normalized_Phosphorylation"),
+      MeasurementType == "Phosphorylation" ~ str_remove(temp, "_Phosphorylation"),
+      TRUE ~ temp
+    )
+  ) %>%
+  separate(temp_clean, into = c("AnimalName", "Condition"), sep = "_") %>%
+  select(-temp)
+
+```
+
+# Heatmap for abundance
 ```{r}
 
-upup <- phos_filtered %>% 
-  group_by(Gene, Animal) %>%
-  if
+
+# Step 1: Filter to Condition == "CA", ensure numeric Abundance
+df_ca <- df_abundance_long %>%
+  filter(Condition == "CA", !is.na(Abundance)) %>%
+  mutate(Abundance = as.numeric(Abundance))
+
+# Step 2: Identify top quartile proteins by total abundance
+top_proteins <- df_ca %>%
+  group_by(ProteinName) %>%
+  summarize(total_abundance = sum(Abundance), .groups = "drop") %>%
+  arrange(desc(total_abundance)) %>%
+  mutate(rank = row_number()) %>%
+  filter(rank <= ceiling(n() * 0.25)) %>% # This is where we set the top X percentile
+  pull(ProteinName)
+
+# Step 3: Log2-transform and pivot with aggregation
+df_matrix <- df_ca %>%
+  filter(ProteinName %in% top_proteins) %>%
+  mutate(logAbundance = log2(Abundance + 1)) %>%
+  select(ProteinName, AnimalName, logAbundance) %>%
+  pivot_wider(
+    names_from = AnimalName,
+    values_from = logAbundance,
+    values_fill = 0,
+    values_fn = mean  # ✅ This resolves duplicates
+  )
+
+# Step 4: Convert to matrix
+df_matrix <- as.data.frame(df_matrix)
+
+# Now it's safe to set rownames
+rownames(df_matrix) <- df_matrix$ProteinName
+
+abundance_mat <- df_matrix %>%
+  select(-ProteinName) %>%
+  mutate(across(everything(), as.numeric)) %>%
+  as.matrix()
+
+# Create short protein names (first 20 chars)
+full_names <- rownames(abundance_mat)
+short_names <- substr(full_names, 1, 20)
+
+
+# Now plot heatmap with these shortened names
+abundance_hm <- Heatmap(
+  t(abundance_mat),
+  name = "log2(Abundance + 1)",
+  cluster_rows = TRUE,
+  cluster_columns = TRUE,
+  show_row_names = TRUE,
+  show_column_names = TRUE,
+  col = colorRamp2(
+    breaks = seq(10, 30, length.out = 5),
+    colors = brewer.pal(5, "Reds")
+  ),
+  column_names_gp = grid::gpar(fontsize = 8),
+  column_names_rot = 45,  
+  heatmap_legend_param = list(title = "log2(Abundance+1)"),
+  column_labels = short_names
+)
+
+abundance_hm
+
+filename <- "heatmap_abundance"
+
+#  # Save the plot (for example, as a PNG) - 1%
+# ggsave(paste0(fig_path, "/", filename, "_top1.png"), units="in", width = 3, height = 2, dpi = 600)
+# cat(paste("File", filename, "has been saved.\n"))
+# # 
+#  # Save the plot (for example, as a PNG) - 5%
+# ggsave(paste0(fig_path, "/", filename, "_top5.png"), units="in", width = 9, height = 2, dpi = 600)
+# cat(paste("File", filename, "has been saved.\n"))
+# 
+#  # Save the plot (for example, as a PNG) - 25%
+# ggsave(paste0(fig_path, "/", filename, "_top25.png"), units="in", width = 9, height = 2, dpi = 600)
+# cat(paste("File", filename, "has been saved.\n"))
+
+png(paste0(fig_path, "/heatmap_abundance_top25.png"), width = 2400, res = 150)
+draw(abundance_hm, 
+  heatmap_height = unit(6, "cm"))
+dev.off()
+
+```
+
+## PCA - Abundance
+```{r}
+
+abundance_df <- df_abundance %>%
+  select(contains("_Abundance")) %>%
+  distinct() %>%
+  mutate(across(everything(), ~ log2(as.numeric(.) + 1))) %>%
+  rowwise() %>%
+  mutate(across(everything(), ~ ifelse(is.na(.), median(c_across(everything()), na.rm = TRUE), .))) %>%
+  ungroup()
+
+  
+# Transpose: columns become rows (samples)
+transposed <- t(abundance_df)
+
+# Get sample names from original colnames
+sample_names <- colnames(df_abundance)[grepl("_Abundance", colnames(df_abundance))]
+
+# Extract metadata: Animal and Condition
+metadata <- tibble(
+  sample = sample_names,
+  Animal = str_extract(sample_names, "^[^_]+"),
+  Condition = str_extract(sample_names, "(?<=_)[^_]+")
+)
+
+# Set row names for transposed data
+rownames(transposed) <- sample_names
+
+# Remove constant columns (zero variance proteins)
+transposed_clean <- transposed[, apply(transposed, 2, function(x) sd(x, na.rm = TRUE) != 0)]
+
+# Run PCA
+pca_result <- prcomp(transposed_clean, scale. = TRUE)
+
+# Get PCA scores (coordinates of samples on principal components)
+pca_scores <- as.data.frame(pca_result$x)
+
+# Add sample names as a column for joining metadata
+pca_scores <- pca_scores %>%
+  mutate(sample = rownames(pca_scores))
+
+# Join metadata
+pca_plot_df <- bind_cols(pca_scores, metadata)
+
+# Add in animal codes
+pca_plot_df$Animal <- gsub("Hoku", "63H4", pca_plot_df$Animal)
+pca_plot_df$Animal <- gsub("Kolohe", "6JK5", pca_plot_df$Animal)
+pca_plot_df$Animal <- gsub("Liho", "01L5", pca_plot_df$Animal)
+pca_plot_df$Animal <- gsub("Nainoa", "9ON6", pca_plot_df$Animal)
+pca_plot_df$Animal <- gsub("Lono", "9FL3", pca_plot_df$Animal)
+
+# Drop Lono PC6C and PC6D
+pca_plot_df <- pca_plot_df %>%
+  filter(!(Animal == "9FL3" & Condition %in% c("PC6C", "PC6D")))
+
+# Basic ggplot PCA scatter plot
+abundance_pca <- ggplot(pca_plot_df, aes(x = PC1, y = PC2, color = as.factor(Animal), shape = Condition)) +
+  geom_point(size = 4, alpha = 0.8) +
+  labs(title = "Protein Abundance PCA",
+       x = paste0("PC1 (", round(summary(pca_result)$importance[2,1]*100, 1), "% variance)"),
+       y = paste0("PC2 (", round(summary(pca_result)$importance[2,2]*100, 1), "% variance)")) +
+  scale_color_manual(values = c('63H4' = '#CC6677',
+                                #'hoku231019' = '#CC6699',
+                                '6JK5' = '#DDCC77',
+                                #'kolohe231016' = '#DDCC22',
+                                '01L5' = '#117733',
+                                #'liho231018' = '#116655',
+                                #'lono231009' = '#6699CC',
+                                '9FL3' = '#6688CC',
+                                '9ON6' = '#EE8866',
+                                #'nainoa231016' = '#EE8888',
+                                'SPQC' = 'black'), name = "Animal") +  
+  scale_shape_manual(values = c(15, 16, 17, 0, 1, 2, 3), name = "Trial Type") +  # Manually assign the shapes
+  theme_minimal() +
+   geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 1) +  # Dotted horizontal line at y = 0
+  geom_vline(xintercept = 0, linetype = "dotted", color = "black", size = 1) + 
+  theme(
+    # Adding black box around the plot
+    #plot.background = element_rect(color = "black", fill = NA, size = 1), # border size and color
+    panel.border = element_rect(color = "black", fill = NA, size = 1), # border around the plot area (panel)
+    legend.spacing = unit(0.05, "lines"),  # Adjust spacing between legend entries
+    legend.key.size = unit(0.4, "cm"),   # Adjust the size of the legend key
+    legend.title = element_text(size = 10), # Adjust the legend title size
+    legend.text = element_text(size = 8)   # Adjust the legend text size
+  ) +
+    theme(plot.title = element_text(hjust = 0.5),
+    legend.title = element_text(face = "bold")+
+    theme_minimal()
+
+  )
+
+
+ggsave(paste0(fig_path, "/", "pca_abundance", ".png"), units="in", width = 5, height = 3.5, dpi = 600, bg = "white")
+
+
+```
+
+
+## PCA phospho
+```{r}
+# Assuming your data frame is called 'df_phospho'
+# Remove non-numeric columns for PCA
+
+phospho_df <- df_phospho %>%
+  select(matches("^(?!.*Log2).*_Normalized_Phosphorylation", perl = TRUE)) %>%
+  distinct() %>%
+  mutate(across(everything(), ~ as.numeric(.))) %>%
+  rowwise() %>%
+  filter(!if_all(everything(), is.na)) %>%
+  mutate(across(everything(), ~ ifelse(is.na(.), median(c_across(everything()), na.rm = TRUE), .))) %>%
+  ungroup()
+
+# Transpose: columns become rows (samples)
+transposed <- t(phospho_df)
+
+# Get sample names from original colnames
+sample_names <- colnames(df_phospho)[grepl("_Log2_Normalized_Phosphorylation", colnames(df_phospho))]
+
+# Extract metadata: Animal and Condition
+metadata <- tibble(
+  sample = sample_names,
+  Animal = str_extract(sample_names, "^[^_]+"),
+  Condition = str_extract(sample_names, "(?<=_)[^_]+")
+)
+
+# Set row names for transposed data
+rownames(transposed) <- sample_names
+
+# Remove constant columns (zero variance proteins)
+transposed_clean <- transposed[, apply(transposed, 2, function(x) sd(x, na.rm = TRUE) != 0)]
+
+# Run PCA
+pca_result <- prcomp(transposed_clean, scale. = TRUE)
+
+# Get PCA scores (coordinates of samples on principal components)
+pca_scores <- as.data.frame(pca_result$x)
+
+# Add sample names as a column for joining metadata
+pca_scores <- pca_scores %>%
+  mutate(sample = rownames(pca_scores))
+
+# Join metadata
+pca_plot_df <- bind_cols(pca_scores, metadata)
+
+# Add in animal codes
+pca_plot_df$Animal <- gsub("Hoku", "63H4", pca_plot_df$Animal)
+pca_plot_df$Animal <- gsub("Kolohe", "6JK5", pca_plot_df$Animal)
+pca_plot_df$Animal <- gsub("Liho", "01L5", pca_plot_df$Animal)
+pca_plot_df$Animal <- gsub("Nainoa", "9ON6", pca_plot_df$Animal)
+pca_plot_df$Animal <- gsub("Lono", "9FL3", pca_plot_df$Animal)
+
+# Drop Lono PC6C and PC6D
+pca_plot_df <- pca_plot_df %>%
+  filter(!(Animal == "9FL3" & Condition %in% c("PC6C", "PC6D")))
+
+# Basic ggplot PCA scatter plot
+phospho_pca <- ggplot(pca_plot_df, aes(x = PC1, y = PC2, color = as.factor(Animal), shape = Condition)) +
+  geom_point(size = 4, alpha = 0.8) +
+  labs(title = "Normalized Phosphoprotein PCA",
+       x = paste0("PC1 (", round(summary(pca_result)$importance[2,1]*100, 1), "% variance)"),
+       y = paste0("PC2 (", round(summary(pca_result)$importance[2,2]*100, 1), "% variance)")) +
+  scale_color_manual(values = c('63H4' = '#CC6677',
+                                #'hoku231019' = '#CC6699',
+                                '6JK5' = '#DDCC77',
+                                #'kolohe231016' = '#DDCC22',
+                                '01L5' = '#117733',
+                                #'liho231018' = '#116655',
+                                #'lono231009' = '#6699CC',
+                                '9FL3' = '#6688CC',
+                                '9ON6' = '#EE8866',
+                                #'nainoa231016' = '#EE8888',
+                                'SPQC' = 'black'), name = "Animal") +  
+  scale_shape_manual(values = c(15, 16, 17, 0, 1, 2, 3), name = "Trial Type") +  # Manually assign the shapes
+  theme_minimal() +
+  geom_hline(yintercept = 0, linetype = "dotted", color = "black", size = 1) +  # Dotted horizontal line at y = 0
+  geom_vline(xintercept = 0, linetype = "dotted", color = "black", size = 1) + 
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, size = 1), # border around the plot area
+    legend.spacing = unit(0.05, "lines"),  # Adjust spacing between legend entries
+    legend.key.size = unit(0.4, "cm"),   # Adjust the size of the legend key
+    legend.title = element_text(size = 10, face = "bold"), # Adjust the legend title size
+    legend.text = element_text(size = 8),   # Adjust the legend text size
+     plot.title = element_text(hjust = 0.5)  )
+
+ggsave(paste0(fig_path, "/", "pca_phospho", ".png"), units = "in", width = 5, height = 3.5, dpi = 600, bg = "white")
+
+```
+
+
+# Heatmap for phospho
+```{r}
+
+# Step 1: Filter to Condition == "CA", ensure numeric Value
+df_ca <- df_phospho_long %>%
+  filter(Condition == "CA", !is.na(Value)) %>%
+  mutate(Value = as.numeric(Value)) %>%
+  filter(MeasurementType == "NormalizedPhosphorylation")
+
+# Step 2: Identify top quartile proteins by total abundance
+top_proteins <- df_ca %>%
+  group_by(ProteinName) %>%
+  summarize(total_phospho = sum(Value), .groups = "drop") %>%
+  arrange(desc(total_phospho)) %>%
+  mutate(rank = row_number()) %>%
+  filter(rank <= ceiling(n() * 0.05)) %>%
+  pull(ProteinName)
+
+# Step 3: Log2-transform and pivot with aggregation
+df_matrix <- df_ca %>%
+  filter(ProteinName %in% top_proteins) %>%
+  mutate(logValue = log2(Value + 1)) %>%
+  select(ProteinName, AnimalName, logValue) %>%
+  pivot_wider(
+    names_from = AnimalName,
+    values_from = logValue,
+    values_fill = 0,
+    values_fn = mean  # ✅ This resolves duplicates
+  )
+
+# Step 4: Convert to matrix
+df_matrix <- as.data.frame(df_matrix)
+
+# Now it's safe to set rownames
+rownames(df_matrix) <- df_matrix$ProteinName
+
+phospho_mat <- df_matrix %>%
+  select(-ProteinName) %>%
+  mutate(across(everything(), as.numeric)) %>%
+  as.matrix()
+
+# Create short protein names (first 20 chars)
+full_names <- rownames(phospho_mat)
+short_names <- substr(full_names, 1, 20)
+
+
+# Now plot heatmap with these shortened names
+phospho_hm <- Heatmap(
+  t(phospho_mat),
+  name = "log2(NormPhospho + 1)",
+  cluster_rows = TRUE,
+  cluster_columns = TRUE,
+  show_row_names = TRUE,
+  show_column_names = TRUE,
+  col = colorRamp2(
+    breaks = seq(0, 8, length.out = 5),
+    colors = brewer.pal(5, "Reds")
+  ),
+  column_names_gp = grid::gpar(fontsize = 7),
+  column_names_rot = 45,  
+  heatmap_legend_param = list(title = "log2(NormPhospho+1)"),
+  column_labels = short_names
+)
+
+
+png(paste0(fig_path, "/heatmap_phospho_top5.png"), width = 1200, res = 150)
+draw(phospho_hm, 
+  heatmap_height = unit(6, "cm"))
+dev.off()
+
+
+```
+# Heatmap for abundance - 1st 5th and 25th percentiles togehter
+```{r}
+
+# Step 1: Filter to Condition == "CA", ensure numeric Abundance
+df_ca <- df_abundance_long %>%
+  filter((Condition == "CA" | Condition == "PC6A"), !is.na(Abundance)) %>%
+  mutate(Abundance = as.numeric(Abundance))
+
+
+# Function to get top percentile proteins by total abundance
+get_top_proteins <- function(df, percentile) {
+  df %>%
+    group_by(ProteinName) %>%
+    summarize(total_abundance = sum(Abundance, na.rm = TRUE), .groups = "drop") %>%
+    arrange(desc(total_abundance)) %>%
+    mutate(rank = row_number()) %>%
+    filter(rank <= ceiling(n() * percentile)) %>%
+    pull(ProteinName)
+}
+
+# Prepare matrices for each percentile
+prepare_matrix <- function(df, top_proteins) {
+  df %>%
+    filter(ProteinName %in% top_proteins) %>%
+    mutate(logAbundance = log2(Abundance + 1)) %>%
+    select(ProteinName, AnimalName, logAbundance) %>%
+    pivot_wider(
+      names_from = AnimalName,
+      values_from = logAbundance,
+      values_fill = 0,
+      values_fn = mean
+    ) -> wide_df
+
+  mat <- as.matrix(wide_df %>% select(-ProteinName))
+  rownames(mat) <- wide_df$ProteinName
+  mat
+}
+
+# Load your abundance data here: df_abundance_long
+# Assuming df_abundance_long has columns: ProteinName, AnimalName, Abundance, Condition
+
+# Filter to relevant Condition if needed, e.g.:
+df_abundance_long <- df_abundance_long %>%
+  filter(!is.na(Abundance), Condition %in% c("CA", "PC6A")) %>%
+  mutate(Abundance = as.numeric(Abundance))
+
+# Get protein sets
+top_1 <- get_top_proteins(df_abundance_long, 0.01)
+top_5 <- get_top_proteins(df_abundance_long, 0.05)
+top_25 <- get_top_proteins(df_abundance_long, 0.25)
+
+# Prepare matrices
+mat_25 <- prepare_matrix(df_abundance_long, top_25)
+mat_5 <- prepare_matrix(df_abundance_long, top_5)
+mat_1 <- prepare_matrix(df_abundance_long, top_1)
+
+# Truncate rownames for plotting (max 30 chars)
+truncate_names <- function(x) substr(x, 1, 30)
+rownames(mat_1) <- truncate_names(rownames(mat_1))
+rownames(mat_5) <- truncate_names(rownames(mat_5))
+# For 25 and 5 percentile, we will NOT show row names
+
+# Color function for heatmaps
+col_fun <- colorRamp2(
+  breaks = seq(0, max(c(mat_25, mat_5, mat_1), na.rm = TRUE), length.out = 5),
+  colors = brewer.pal(5, "Reds")
+)
+
+# Set a consistent heatmap width
+heatmap_width <- unit(3, "cm")
+
+# Replacing Nas with zero
+mat_25[is.na(mat_25)] <- 0
+mat_5[is.na(mat_5)] <- 0
+mat_1[is.na(mat_1)] <- 0
+
+# Create heatmaps:
+
+hm_25 <- Heatmap(
+  mat_25,
+  name = "Top 25%",
+  cluster_rows = TRUE,
+  cluster_columns = TRUE,
+  show_row_names = FALSE,
+  show_column_names = TRUE,
+  column_names_gp = gpar(fontsize = 7),
+  column_names_rot = 45,
+  col = col_fun,
+  column_title = "Top 25% Proteins by Abundance",
+  heatmap_legend_param = list(title = "log2(Abundance+1)"),
+  width = heatmap_width
+)
+
+hm_5 <- Heatmap(
+  mat_5,
+  name = "Top 5%",
+  cluster_rows = TRUE,
+  cluster_columns = TRUE,
+  show_row_names = FALSE,
+  show_column_names = TRUE,
+  column_names_gp = gpar(fontsize = 7),
+  column_names_rot = 45,
+  col = col_fun,
+  column_title = "Top 5% Proteins by Abundance",
+  heatmap_legend_param = list(title = "log2(Abundance+1)"),
+  width = heatmap_width
+)
+
+hm_1 <- Heatmap(
+  mat_1,
+  name = "Top 1%",
+  cluster_rows = TRUE,
+  cluster_columns = TRUE,
+  show_row_names = TRUE,
+  show_column_names = TRUE,
+  row_names_gp = gpar(fontsize = 8),
+  column_names_gp = gpar(fontsize = 7),
+  column_names_rot = 45,
+  col = col_fun,
+  column_title = "Top 1% Proteins by Abundance",
+  heatmap_legend_param = list(title = "log2(Abundance+1)",
+    legend_width = unit(6, "cm"),
+    title_gp = gpar(fontsize = 8),
+    labels_gp = gpar(fontsize = 8)),
+  width = heatmap_width
+)
+
+# Capture grobs, and draw blue box around first 1% heatmap rows
+# hm_25 with box around top 76 rows
+grob_25 <- grid.grabExpr({
+  draw(hm_25, show_heatmap_legend = FALSE)
+  decorate_heatmap_body("Top 25%", {
+    n <- 76
+    total_rows <- nrow(hm_25@matrix)
+    row_height <- 1 / total_rows
+    bottom_y <- 1 - n * row_height
+    
+    grid.rect(
+      x = unit(0, "npc"),
+      y = unit(bottom_y + (1 - bottom_y) / 2, "npc"),
+      width = unit(1, "npc"),
+      height = unit(n * row_height, "npc"),
+      just = c("left", "center"),
+      gp = gpar(col = "blue", fill = NA, lwd = 2)
+    )
+  })
+})
+
+# hm_5 with box around top 16 rows
+grob_5 <- grid.grabExpr({
+  draw(hm_5, show_heatmap_legend = FALSE)
+  decorate_heatmap_body("Top 5%", {
+    n <- 16
+    total_rows <- nrow(hm_5@matrix)
+    row_height <- 1 / total_rows
+    bottom_y <- 1 - n * row_height
+    
+    grid.rect(
+      x = unit(0, "npc"),
+      y = unit(bottom_y + (1 - bottom_y) / 2, "npc"),
+      width = unit(1, "npc"),
+      height = unit(n * row_height, "npc"),
+      just = c("left", "center"),
+      gp = gpar(col = "blue", fill = NA, lwd = 2)
+    )
+  })
+})
+
+# hm_1 with NO box
+grob_1 <- grid.grabExpr({
+  draw(hm_1, show_heatmap_legend = TRUE)
+  # no decorate_heatmap_body call here
+})
+
+# Combine the grobs side-by-side
+final_plot <- cowplot::plot_grid(
+  grob_25, grob_5, grob_1,
+  nrow = 1,
+  align = "v",
+  rel_widths = c(0.8, 1, 1.6)
+)
+
+final_plot
+
+# Save plot if you want
+# Save
+ggsave(paste0(fig_path, "/adbundance_heatmaps.png"), final_plot, bg = "white", width = 9.5, height = 6, dpi = 300)
+
+
+```
+
+
+# Heatmap for phospho - 5th and 25th percentiles together
+```{r}
+library(tidyverse)
+library(ComplexHeatmap)
+library(circlize)
+library(RColorBrewer)
+library(grid)
+
+# --- Step 1: Filter CA condition and select numeric values ---
+df_ca <- df_phospho_long %>%
+  filter((Condition == "CA" | Condition == "PC6A"), !is.na(Value)) %>%
+  mutate(Value = as.numeric(Value)) %>%
+  filter(MeasurementType == "NormalizedPhosphorylation")
+
+# --- Step 2: Get 25th and 5th percentile protein lists ---
+protein_ranks <- df_ca %>%
+  group_by(ProteinName) %>%
+  summarize(total_phospho = sum(Value), .groups = "drop") %>%
+  arrange(desc(total_phospho)) %>%
+  mutate(rank = row_number())
+
+top_25_percent <- protein_ranks %>%
+  filter(rank <= ceiling(n() * 0.25)) %>%
+  pull(ProteinName)
+
+top_5_percent <- protein_ranks %>%
+  filter(rank <= ceiling(n() * 0.05)) %>%
+  pull(ProteinName)
+
+# --- Step 3: Pivot data and log-transform ---
+make_matrix <- function(protein_list) {
+  df_ca %>%
+    filter(ProteinName %in% protein_list) %>%
+    mutate(logValue = log2(Value + 1)) %>%
+    select(ProteinName, AnimalName, logValue) %>%
+    pivot_wider(
+      names_from = AnimalName,
+      values_from = logValue,
+      values_fill = 0,
+      values_fn = mean
+    ) %>%
+    column_to_rownames("ProteinName") %>%
+    as.matrix()
+}
+
+mat_25 <- make_matrix(top_25_percent)
+mat_5 <- mat_25[rownames(mat_25) %in% top_5_percent, , drop = FALSE]
+
+# Create color palette
+col_fun <- colorRamp2(
+  breaks = seq(0, max(c(mat_25, mat_5), na.rm = TRUE), length.out = 5),
+  colors = brewer.pal(5, "Reds")
+)
+
+# Short row names for display
+short_names_5 <- substr(rownames(mat_5), 1, 20)
+
+# --- Step 4: Create the 25% heatmap (no row labels) with box around 5% ---
+# First get indices for top 5% in 25% heatmap
+row_order_25 <- match(rownames(mat_25), rownames(mat_25))
+rows_5_in_25 <- which(rownames(mat_25) %in% rownames(mat_5))
+
+# Set equal widths for both heatmaps' core area
+heatmap_width <- unit(6, "cm")
+
+# Original rownames
+original_names <- rownames(mat_5)
+
+# Truncate to first 30 characters
+truncated_names <- substr(original_names, 1, 30)
+
+# Assign truncated names back as rownames for display only
+rownames(mat_5) <- truncated_names
+
+# Heatmap for top 25% (no protein names)
+hm_25 <- Heatmap(
+  mat_25,
+  name = "Top 25%",
+  cluster_rows = TRUE,
+  cluster_columns = TRUE,
+  show_row_names = FALSE,     # Don't show protein labels
+  show_column_names = TRUE,
+  column_names_gp = gpar(fontsize = 8),
+  row_names_gp = gpar(fontsize = 6),
+  column_title = "Top 25% of Proteins by Phosphorylation",
+  column_title_gp = gpar(fontsize = 10),
+  col = col_fun,
+  width = heatmap_width  # ✅ enforce equal width
+)
+
+# Heatmap for top 5% (with protein labels)
+hm_5 <- Heatmap(
+  mat_5,
+  name = "Top 5%",
+  cluster_rows = TRUE,
+  cluster_columns = TRUE,
+  show_row_names = TRUE,      # Show protein labels here
+  show_column_names = TRUE,
+  column_names_gp = gpar(fontsize = 8),
+  row_names_gp = gpar(fontsize = 8),
+  column_title = "Top 5% of Proteins by Phosphorylation",
+  column_title_gp = gpar(fontsize = 10),
+  col = col_fun,
+  heatmap_legend_param = list(
+    title = "log2(NormPhospho+1)",
+    legend_width = unit(6, "cm"),
+    title_gp = gpar(fontsize = 8),
+    labels_gp = gpar(fontsize = 8)),
+  width = heatmap_width  # ✅ enforce equal width
+)
+
+# Combine
+# Render each heatmap individually and capture as grobs
+grob_25 <- grid.grabExpr({
+  draw(hm_25, show_heatmap_legend = FALSE)
+  decorate_heatmap_body("Top 25%", {
+    n <- 23
+    total_rows <- nrow(hm_25@matrix)  # number of rows in heatmap matrix
+    
+    row_height <- 1 / total_rows
+    
+    bottom_y <- 1 - n * row_height
+    
+    grid.rect(
+      x = unit(0, "npc"),
+      y = unit(bottom_y + (1 - bottom_y) / 2, "npc"),
+      width = unit(1, "npc"),
+      height = unit(n * row_height, "npc"),
+      just = c("left", "center"),
+      gp = gpar(col = "blue", fill = NA, lwd = 2)
+    )
+  })
+})
+
+grob_5 <- grid.grabExpr(draw(hm_5, heatmap_legend_side = "right", show_heatmap_legend = TRUE))
+
+final_plot <- cowplot::plot_grid(grob_25, grob_5, nrow = 1, rel_widths = c(1, 1.6), align = "v", axis = "tb", greedy = TRUE)
+
+
+# Save
+ggsave(paste0(fig_path, "/phospho_heatmaps.png"), final_plot, bg = "white", width = 9.5, height = 6, dpi = 300)
+
+
+```
+
+# Dot plot for abundnace
+```{r}
+
+# Step 2: Compute mean per Protein per Type
+mean_abundance_df <- df_abundance_long %>%
+  filter(Condition == "CA") %>%
+  group_by(ProteinName) %>%
+  summarise(mean_abun = mean(as.numeric(Abundance), na.rm = TRUE), sd_abun= sd(as.numeric(Abundance), na.rm = TRUE), .groups = "drop") 
+  
+
+# Step 3: Order by mean value (descending)
+mean_abundance_df <- mean_abundance_df %>%
+  arrange(desc(mean_abun)) %>%
+  mutate(log2_abun = log2(mean_abun)) %>%
+  mutate(log2_sd= log2(sd_abun)) %>%
+  mutate(ProteinName = factor(ProteinName, levels = unique(ProteinName)))
+
+# Step 4: Plot
+dot_abundance <- ggplot(mean_abundance_df, aes(x = ProteinName, y = log2_abun)) +
+  geom_point(size = 0.5, alpha = 0.5) +
+  theme_minimal() +
+  labs(
+    title = "Mean Abundance per Protein ",
+    x = "Protein (ordered)",
+    y = "Mean Value"
+  ) +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.grid = element_blank()
+  )
+
+# # Add in animal codes
+# df_abundance_long$AnimalName <- gsub("Hoku", "63H4", df_abundance_long$AnimalName)
+# df_abundance_long$AnimalName <- gsub("Kolohe", "6JK5", df_abundance_long$AnimalName)
+# df_abundance_long$AnimalName <- gsub("Liho", "01L5", df_abundance_long$AnimalName)
+# df_abundance_long$AnimalName <- gsub("Nainoa", "9ON6", df_abundance_long$AnimalName)
+# df_abundance_long$AnimalName<- gsub("Lono", "9FL3", df_abundance_long$AnimalName)
+# 
+# 
+# df_abundance_long %>%
+#   filter(Condition == "CA") %>%
+#   mutate(logAbundance = log2(as.numeric(Abundance))) %>%
+# ggplot(aes(x = ProteinName, y = logAbundance, color = AnimalName)) +
+#   geom_jitter(width = 0.2, alpha = 0.7, size = 2) +
+#   #facet_wrap(~ ProteinName, scales = "free_y") +
+#   theme_minimal() +
+#   scale_color_manual(values = c('63H4' = '#CC6677',
+#                                 #'hoku231019' = '#CC6699',
+#                                 '6JK5' = '#DDCC77',
+#                                 #'kolohe231016' = '#DDCC22',
+#                                 '01L5' = '#117733',
+#                                 #'liho231018' = '#116655',
+#                                 #'lono231009' = '#6699CC',
+#                                 '9FL3' = '#6688CC',
+#                                 '9ON6' = '#EE8866',
+#                                 #'nainoa231016' = '#EE8888',
+#                                 'SPQC' = 'black'), name = "Animal")+
+#   labs(
+#     title = "Abundance per Protein",
+#     x = "Measurement Type",
+#     y = "Abundance"
+#   ) +
+#   theme(
+#     axis.text.x = element_blank(),
+#     axis.ticks.x = element_blank(),
+#     panel.grid = element_blank()
+#   )
+```
+
+# Dot plot for phospho
+```{r}
+
+# Add in animal codes
+df_phospho_long$AnimalName <- gsub("Hoku", "63H4", df_phospho_long$AnimalName)
+df_phospho_long$AnimalName <- gsub("Kolohe", "6JK5", df_phospho_long$AnimalName)
+df_phospho_long$AnimalName <- gsub("Liho", "01L5", df_phospho_long$AnimalName)
+df_phospho_long$AnimalName <- gsub("Nainoa", "9ON6", df_phospho_long$AnimalName)
+df_phospho_long$AnimalName<- gsub("Lono", "9FL3", df_phospho_long$AnimalName)
+
+
+df_phospho_long %>%
+  filter(Condition == "CA") %>%
+  filter(MeasurementType == "NormalizedPhosphorylation") %>%
+ggplot(aes(x = ProteinName, y = as.numeric(Value), color = AnimalName)) +
+  geom_jitter(width = 0.2, alpha = 0.7, size = 2) +
+  #facet_wrap(~ ProteinName, scales = "free_y") +
+  theme_minimal() +
+  scale_color_manual(values = c('63H4' = '#CC6677',
+                                #'hoku231019' = '#CC6699',
+                                '6JK5' = '#DDCC77',
+                                #'kolohe231016' = '#DDCC22',
+                                '01L5' = '#117733',
+                                #'liho231018' = '#116655',
+                                #'lono231009' = '#6699CC',
+                                '9FL3' = '#6688CC',
+                                '9ON6' = '#EE8866',
+                                #'nainoa231016' = '#EE8888',
+                                'SPQC' = 'black'), name = "Animal")+
+  labs(
+    title = "Normalized Phosphorylation per Protein",
+    x = "Measurement Type",
+    y = "Value"
+  ) +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.grid = element_blank()
+  )
+```
+
+# DOt plots togehters
+```{r}
+# Step 1: Filter both long datasets
+abund_ca <- df_abundance_long %>%
+  filter(Condition == "CA") %>%
+  mutate(Type = "Abundance") %>%
+  mutate(Value = Abundance)
+
+phos_ca <- df_phospho_long %>%
+  filter(Condition == "CA" & MeasurementType == "Phosphorylation") %>%
+  mutate(Type = "Phospho") 
+
+# Step 2: Combine both
+combined_long <- bind_rows(abund_ca, phos_ca) %>%
+  mutate(Log2Value = log2(as.numeric(Value)+1))
+
+# Step 3: Summarize mean and SD per Protein and Type
+summary_df <- combined_long %>%
+  group_by(ProteinName, Type) %>%
+  summarise(
+    mean_value = mean(as.numeric(Log2Value), na.rm = TRUE),
+    sd_value = sd(as.numeric(Log2Value), na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(mean_value)) %>%
+  mutate(ProteinName = factor(ProteinName, levels = unique(ProteinName)))
+
+# Step 4: Plot
+ggplot(summary_df, aes(x = ProteinName, y = mean_value, color = Type)) +
+  geom_point(size = 0.25, alpha = 0.5) +
+  geom_errorbar(aes(ymin = mean_value - sd_value,
+                    ymax = mean_value + sd_value),
+                width = 0.2, alpha = 0.5, size = 0.2) +
+  scale_y_continuous(expand = expansion(mult = c(1, 1))) +
+  scale_color_manual(
+    name = "",
+    values = c("Abundance" = "darkred", "Phospho" = "tomato"),
+    labels = c("Abundance" = "Abundance", "Phospho" = "Phosphorylation")
+  )+
+  ylim(0, 30) +
+  coord_flip() +
+  theme_minimal() +
+  labs(
+    x = "Protein (ordered by mean Abundance)",
+    y = "log2(Mean Value+1)"
+  ) +
+  theme(
+    panel.grid = element_blank(),
+    axis.text.y = element_blank(),  # You can tweak size for better readability
+    legend.position = "top", legend.direction = "horizontal", legend.justification = "center"
+  )
+
+ggsave(paste0(fig_path, "/", "dot_abun_phospho", ".png"), units = "in", width = 3, height = 6, dpi = 600, bg = "white")
+
+```
+
+
+# Compare post breath-hold control vs PC (upreg)
+```{r}
+
+# Step 2: Compute mean abundance per protein per timepoint
+abund_summary <- df_abundance_long %>%
+  group_by(Protein = ProteinName, Condition) %>%
+  summarise(mean_abund = mean(as.numeric(Abundance), na.rm = TRUE), .groups = "drop")
+
+# Step 3: Pivot wider to align timepoints
+fold_abundance_df <- abund_summary %>%
+  pivot_wider(names_from = Condition, values_from = mean_abund) %>%
+  # Step 4: Compute log2 fold changes
+  mutate(
+    log2_CC_vs_CA   = log2(CC / CA),
+    log2_PC6C_vs_PC6A = log2(PC6C / PC6A),
+    log2_diff = log2_PC6C_vs_PC6A - log2_CC_vs_CA 
+  ) %>%
+  # Step 5: Filter top 100 upregulated (most positive log2_diff)
+  filter(!is.na(log2_diff)) %>%
+  arrange(desc(log2_diff)) %>%
+  slice_head(n = 100) %>%
+  #mutate(Protein = factor(Protein, levels = Protein[order(log2_diff)])) %>% # preserve order for plot 
+  # Step 6 Truncate protein labels and order for plotting
+ mutate(
+  Protein_label = str_trunc(Protein, width = 20),
+  Protein_label = make.unique(Protein_label),
+  Protein_label = factor(Protein_label, levels = rev(Protein_label[order(log2_diff)]))
+)
+
+# Step 6: Plot
+ggplot(fold_abundance_df, aes(x = Protein_label, y = log2_diff)) +
+  geom_point(size = 2, color= "steelblue") +
+  theme_minimal() +
+  labs(
+    title = "Top 100 Upregulated Proteins (PC6 relative to Control)",
+    x = "Protein",
+    y = "Relative log2 Fold Change"
+  ) +
+  theme(
+    panel.grid = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 4)
+  )
+
+ggsave(paste0(fig_path, "/", "upreg_PC6", ".png"), units="in", width = 8, height = 3, dpi = 600, bg = "white")
+
+
+```
+
+# Compare post breath-hold control vs PC (downreg)
+```{r}
+
+# Step 2: Compute mean abundance per protein per timepoint
+abund_summary <- df_abundance_long %>%
+  group_by(Protein = ProteinName, Condition) %>%
+  summarise(mean_abund = mean(as.numeric(Abundance), na.rm = TRUE), .groups = "drop")
+
+# Step 3: Pivot wider to align timepoints
+fold_abundance_df <- abund_summary %>%
+  pivot_wider(names_from = Condition, values_from = mean_abund) %>%
+  # Step 4: Compute log2 fold changes
+  mutate(
+    log2_CC_vs_CA   = log2(CC / CA),
+    log2_PC6C_vs_PC6A = log2(PC6C / PC6A),
+    log2_diff = log2_PC6C_vs_PC6A - log2_CC_vs_CA 
+  ) %>%
+  # Step 5: Filter top 100 upregulated (most positive log2_diff)
+  filter(!is.na(log2_diff)) %>%
+  arrange(log2_diff) %>%
+  slice_head(n = 100) %>%
+  #mutate(Protein = factor(Protein, levels = Protein[order(log2_diff)])) %>% # preserve order for plot 
+  # Step 6 Truncate protein labels and order for plotting
+ mutate(
+  Protein_label = str_trunc(Protein, width = 20),
+  Protein_label = make.unique(Protein_label),
+  Protein_label = factor(Protein_label, levels = Protein_label[order(log2_diff)])
+)
+
+# Step 6: Plot
+ggplot(fold_abundance_df, aes(x = Protein_label, y = log2_diff)) +
+  geom_point(size = 2, color= "steelblue") +
+  theme_minimal() +
+  labs(
+    title = "Top 100 Downregulated Proteins (PC6 relative to Control)",
+    x = "Protein",
+    y = "Relative log2 Fold Change"
+  ) +
+  theme(
+    panel.grid = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 4)
+  )
+
+ggsave(paste0(fig_path, "/", "downreg_PC6", ".png"), units="in", width = 8, height = 3, dpi = 600, bg = "white")
+
+
 ```
